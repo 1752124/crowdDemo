@@ -10,6 +10,7 @@
 		<script type="text/javascript" src="../lib/stats.js"></script>
 		<script type="text/javascript" src="../lib/jquery-1.8.2.js"></script>
 		<script src="../lib/astar.js"></script>
+<!--		<script src="../lib/tweenjs.js"></script>-->
 		<script src="../lib/DRACOLoader.js"></script>
 		<script src="../lib/GLTFLoader.js"></script>
 		<script src="../lib/MyOrbitControls.js"></script>
@@ -33,6 +34,7 @@
 			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 			import { Fire } from './jsm/objects/Fire.js';
 			import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+			import {TWEEN} from "./jsm/libs/tween.module.min.js";
 
 			var camera, scene, renderer,
 				bulbLight, bulbMat, hemiLight, stats;
@@ -302,11 +304,14 @@
 
 				//获得点击坐标
 				let resultArray = [];
-				let interval;
+				let isRun = false;
+				let interval,meshInterval;
 				let raycaster = new THREE.Raycaster();
 				let mouse = new THREE.Vector2();
 				let groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 				function pickupObjects(e){
+					if(isRun)
+						return;
 					//将鼠标点击位置的屏幕坐标转成threejs中的标准坐标
 					mouse.x = (e.clientX/window.innerWidth)*2 -1;
 					mouse.y = -(e.clientY/window.innerHeight)*2 + 1;
@@ -411,8 +416,10 @@
 							cleanSphere();
 							return;
 						}
+						activeMesh(result);
 						let timesRun = 0;
 						interval = setInterval(function(){
+							isRun = true;
 							let geometry = new THREE.CubeGeometry( 145, 1, 145 );
 							let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
 							let cube = new THREE.Mesh( geometry, material );
@@ -424,14 +431,88 @@
 							timesRun += 1;
 							if(timesRun === result.length){
 								clearInterval(interval);
+								isRun = false;
 							}
 						}, 200);
-
 					}
-					//console.log(reslutArray);
+				}
+
+				function activeMesh(result)
+				{
+					let count =0;
+					let movePoint = [];
+					let moveStep = [];
+					let moveArr = [];
+					let mesh = [];
+					for(let i = 0;i<result.length-1;i++)
+					{
+						if(result[i].x !== result[i+1].x)
+						{
+							if(result[i+1].x>result[i].x) {
+								movePoint.push(0);
+								moveStep.push(['+150','+0']);
+							}
+							else {
+								movePoint.push(1);
+								moveStep.push(['-150','+0']);
+							}
+						}
+						else
+						{
+							if(result[i+1].y>result[i].y) {
+								movePoint.push(2);
+								moveStep.push(['+0','+150']);
+							}
+							else {
+								movePoint.push(3);
+								moveStep.push(['+0','-150']);
+							}
+						}
+					}
+
+					for(let i = 0;i<result.length;i++)
+					{
+						let temp = [];
+						temp.push((result[i].x*gridLength-lineLength/2+gridLength/2));
+						temp.push((result[i].y*gridLength-lineLength/2+gridLength/2));
+						moveArr.push(temp);
+					}
+
+					for(let i =0;i<scene.children.length;i++)
+					{
+						if(scene.children[i].type === "Group")
+							mesh.push(scene.children[i]);
+					}
+
+					meshInterval = setInterval(function(){
+
+
+						for (let i = 0; i < mesh.length; i++)
+						{
+							if(movePoint[count]===0)
+								mesh[i].rotation.y = 0;
+							else if(movePoint[count]===1)
+								mesh[i].rotation.y = -Math.PI;
+							else if(movePoint[count]===2)
+								mesh[i].rotation.y = Math.PI/2;
+							else if(movePoint[count]===3)
+								mesh[i].rotation.y = -Math.PI/2;
+
+							getTween(mesh[i]);
+						}
+
+						count += 1;
+						if(count === movePoint.length){
+							clearInterval(meshInterval);
+						}
+						function getTween(obj)
+						{
+								return new TWEEN.Tween(obj.position).to({x:moveStep[count][1],z:moveStep[count][0]}, 200)
+										.start();
+						}
+					}, 200);
 
 				}
-				//scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.00025 );
 
 //////////////////////////////////////////////// 寻路 ////////////////////////////////////////////////
 
@@ -1706,6 +1787,7 @@
 					statsFPS.update();
 					statsMem.update();
 					statsTime.update();
+					TWEEN.update();
 					renderer.clear();
 					renderer.render(scene, camera);
 
