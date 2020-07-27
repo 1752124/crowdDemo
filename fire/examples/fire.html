@@ -302,6 +302,7 @@
 
 				//获得点击坐标
 				let resultArray = [];
+				let interval;
 				let raycaster = new THREE.Raycaster();
 				let mouse = new THREE.Vector2();
 				let groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
@@ -329,13 +330,16 @@
 							break;
 						}
 					}
-					initSphere(k,m);
+					if(k !== undefined && m !== undefined)
+						initSphere(k,m);
 				}
 
 				document.addEventListener('click',pickupObjects,false);
 				let isCaculate=false;
 
 				function cleanSphere(){
+					if(interval!==undefined)
+						clearInterval(interval);
 					let child=scene.children;
 					for(let i=0;i<child.length;i++){
 						//if(child[i].geometry instanceof THREE.CubeGeometry)
@@ -350,10 +354,10 @@
 
 				//设定起点终点
 				function initSphere(x,z){
-					cleanSphere();
 					if(resultArray.length>1)
 						resultArray = [];
 					if(resultArray.length === 0){
+						cleanSphere();
 						let geometry = new THREE.CubeGeometry( 145, 1, 145 );
 						let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
 						let sphere = new THREE.Mesh( geometry, material );
@@ -375,6 +379,7 @@
 						resultArray.push(sphere2);
 					}
 					if(resultArray[0].position.x !== x && resultArray[0].position.z !== z){
+						cleanSphere();
 						let geometry = new THREE.CubeGeometry( 145, 1, 145 );
 						let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
 						let sphere = new THREE.Mesh( geometry, material );
@@ -407,7 +412,7 @@
 							return;
 						}
 						let timesRun = 0;
-						let interval = setInterval(function(){
+						interval = setInterval(function(){
 							let geometry = new THREE.CubeGeometry( 145, 1, 145 );
 							let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
 							let cube = new THREE.Mesh( geometry, material );
