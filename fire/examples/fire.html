@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - lights - physical lights</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+
+		<script type="text/javascript" src="../lib/three.js"></script>
+		<script type="text/javascript" src="../lib/stats.js"></script>
+		<script type="text/javascript" src="../lib/jquery-1.8.2.js"></script>
+		<script src="../lib/DRACOLoader.js"></script>
+		<script src="../lib/GLTFLoader.js"></script>
+		<script src="../lib/MyOrbitControls.js"></script>
+	</head>
+	<body>
+        <div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> fire and smoke</div>
+		<br><br><br>
+		<a class="input-title">Number of People: </a> <input type="text" id="number" placeholder="Enter the number"><br>
+		<button  type="button" onclick="window.load()">Load</button>
+		<!-- 用于显示统计图形 -->
+		<div id="container"></div>
+		<div id="Stats-output"></div>
+		<div id="WebGL-output" style="overflow: hidden;"></div>
+		<script type="module">
+
+			import * as THREE from '../build/three.module.js';
+
+			//import Stats from './jsm/libs/stats.module.js';
+			import { GUI } from './jsm/libs/dat.gui.module.js';
+
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
+			import { Fire } from './jsm/objects/Fire.js';
+			import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+
+			var camera, scene, renderer,
+				bulbLight, bulbMat, hemiLight, stats;
+			var ballMat, cubeMat, floorMat;
+			var fire;
+			
+			window.load = load;
+
+			// ref for lumens: http://www.power-sure.com/lumens.htm
+			var bulbLuminousPowers = {
+				"110000 lm (1000W)": 110000,
+				"3500 lm (300W)": 3500,
+				"1700 lm (100W)": 1700,
+				"800 lm (60W)": 800,
+				"400 lm (40W)": 400,
+				"180 lm (25W)": 180,
+				"20 lm (4W)": 20,
+				"Off": 0
+			};
+
+			// ref for solar irradiances: https://en.wikipedia.org/wiki/Lux
+			var hemiLuminousIrradiances = {
+				"0.0001 lx (Moonless Night)": 0.0001,
+				"0.002 lx (Night Airglow)": 0.002,
+				"0.5 lx (Full Moon)": 0.5,
+				"3.4 lx (City Twilight)": 3.4,
+				"50 lx (Living Room)": 50,
+				"100 lx (Very Overcast)": 100,
+				"350 lx (Office Room)": 350,
+				"400 lx (Sunrise/Sunset)": 400,
+				"1000 lx (Overcast)": 1000,
+				"18000 lx (Daylight)": 18000,
+				"50000 lx (Direct Sun)": 50000
+			};
+
+			// var params = {
+			// 	shadows: true,
+			// 	exposure: 0.68,
+			// 	bulbPower: Object.keys( bulbLuminousPowers )[ 4 ],
+			// 	hemiIrradiance: Object.keys( hemiLuminousIrradiances )[ 0 ]
+			// };
+			var params = {
+					shadows: true,
+					exposure: 0.68,
+					bulbPower: Object.keys( bulbLuminousPowers )[ 4 ],
+					hemiIrradiance: Object.keys( hemiLuminousIrradiances )[ 0 ],
+				color1: '#ffffff',
+				color2: '#ffa000',
+				color3: '#000000',
+				colorBias: 0.8,
+				burnRate: 0.35,
+				diffuse: 1.33,
+				viscosity: 0.25,
+				expansion: - 0.25,
+				swirl: 50.0,
+				drag: 0.35,
+				airSpeed: 12.0,
+				windX: 0.0,
+				windY: 0.75,
+				speed: 500.0,
+				massConservation: false
+			};
+
+			//init();
+			//animate();
+
+			function init( scene, renderer, camera ) {
+
+				var container = document.getElementById( 'container' );
+
+				//stats = new Stats();
+				//container.appendChild( stats.dom );
+
+				//camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 100 );
+				//camera.position.x = - 4;
+				//camera.position.z = 4;
+				//camera.position.y = 2;
+
+				//scene = new THREE.Scene();
+
+				var bulbGeometry = new THREE.SphereBufferGeometry( 0.02, 16, 8 );
+				bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
+
+				bulbMat = new THREE.MeshStandardMaterial( {
+					emissive: 0xffffee,
+					emissiveIntensity: 1,
+					color: 0x000000
+				} );
+				bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+				bulbLight.position.set( 0, 2, 0 );
+				bulbLight.castShadow = true;
+				scene.add( bulbLight );
+
+				hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
+				scene.add( hemiLight );
+
+				floorMat = new THREE.MeshStandardMaterial( {
+					roughness: 0.8,
+					color: 0xffffff,
+					metalness: 0.2,
+					bumpScale: 0.005
+				} );
+				//var ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
+				//scene.add( ambientLight );
+
+				var pointLight = new THREE.PointLight( 0xffffff, 0.8 );
+				camera.add( pointLight );
+				scene.add( camera );
+				var plane = new THREE.PlaneBufferGeometry( 1000, 1000);
+				fire = new Fire( plane, {
+					textureWidth: 512,
+					textureHeight: 512,
+					debug: false
+				} );
+				fire.position.z = - 2;
+			    fire.position.y = 300;
+				scene.add( fire );
+				var plane1 = new THREE.PlaneBufferGeometry( 10000, 5000);
+				var fire1 = new Fire( plane1, {
+					textureWidth: 512,
+					textureHeight: 512,
+					debug: false
+				} );
+				fire1.position.z = - 5000;
+				fire1.position.x = 2000;
+				fire1.position.y = 400;
+				scene.add( fire1 );
+				var plane2 = new THREE.PlaneBufferGeometry( 3000, 2000);
+				var fire2 = new Fire( plane2, {
+					textureWidth: 512,
+					textureHeight: 512,
+					debug: false
+				} );
+				fire2.position.z = - 1000;
+				fire2.position.x = 3000;
+				fire2.position.y = 400;
+				scene.add( fire2 );
+				var plane3 = new THREE.PlaneBufferGeometry( 5000, 2000);
+				var fire3 = new Fire( plane3, {
+					textureWidth: 512,
+					textureHeight: 512,
+					debug: false
+				} );
+				fire3.position.z = - 3000;
+				fire3.position.x = -3000;
+				fire3.position.y = 400;
+				scene.add( fire3 );
+				var textureLoader = new THREE.TextureLoader();
+				textureLoader.load( "textures/hardwood2_diffuse.jpg", function ( map ) {
+
+					map.wrapS = THREE.RepeatWrapping;
+					map.wrapT = THREE.RepeatWrapping;
+					map.anisotropy = 4;
+					map.repeat.set( 10, 24 );
+					map.encoding = THREE.sRGBEncoding;
+					floorMat.map = map;
+					floorMat.needsUpdate = true;
+
+	} );
+				textureLoader.load( "textures/hardwood2_bump.jpg", function ( map ) {
+
+					map.wrapS = THREE.RepeatWrapping;
+					map.wrapT = THREE.RepeatWrapping;
+					map.anisotropy = 4;
+					map.repeat.set( 10, 24 );
+					floorMat.bumpMap = map;
+					floorMat.needsUpdate = true;
+
+	} );
+				textureLoader.load( "textures/hardwood2_roughness.jpg", function ( map ) {
+
+					map.wrapS = THREE.RepeatWrapping;
+					map.wrapT = THREE.RepeatWrapping;
+					map.anisotropy = 4;
+					map.repeat.set( 10, 24 );
+					floorMat.roughnessMap = map;
+					floorMat.needsUpdate = true;
+
+	} );
+
+				cubeMat = new THREE.MeshStandardMaterial( {
+					roughness: 0.7,
+					color: 0xffffff,
+					bumpScale: 0.002,
+					metalness: 0.2
+				} );
+				textureLoader.load( "textures/brick_diffuse.jpg", function ( map ) {
+
+					map.wrapS = THREE.RepeatWrapping;
+					map.wrapT = THREE.RepeatWrapping;
+					map.anisotropy = 4;
+					map.repeat.set( 1, 1 );
+					map.encoding = THREE.sRGBEncoding;
+					cubeMat.map = map;
+					cubeMat.needsUpdate = true;
+
+	} );
+				textureLoader.load( "textures/brick_bump.jpg", function ( map ) {
+
+					map.wrapS = THREE.RepeatWrapping;
+					map.wrapT = THREE.RepeatWrapping;
+					map.anisotropy = 4;
+					map.repeat.set( 1, 1 );
+					cubeMat.bumpMap = map;
+					cubeMat.needsUpdate = true;
+
+	} );
+
+				ballMat = new THREE.MeshStandardMaterial( {
+					color: 0xffffff,
+					roughness: 0.5,
+					metalness: 1.0
+				} );
+				textureLoader.load( "textures/planets/earth_atmos_2048.jpg", function ( map ) {
+
+					map.anisotropy = 4;
+					map.encoding = THREE.sRGBEncoding;
+					ballMat.map = map;
+					ballMat.needsUpdate = true;
+
+	} );
+				textureLoader.load( "textures/planets/earth_specular_2048.jpg", function ( map ) {
+
+					map.anisotropy = 4;
+					map.encoding = THREE.sRGBEncoding;
+					ballMat.metalnessMap = map;
+					ballMat.needsUpdate = true;
+
+	} );
+
+				var floorGeometry = new THREE.PlaneBufferGeometry( 20000, 20000 );
+				var floorMesh = new THREE.Mesh( floorGeometry, floorMat );
+				floorMesh.receiveShadow = true;
+				floorMesh.rotation.x = - Math.PI / 2.0;
+				scene.add( floorMesh );
+
+				//renderer = new THREE.WebGLRenderer();
+				renderer.physicallyCorrectLights = true;
+				renderer.shadowMap.enabled = true;
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				//var controls = new OrbitControls( camera, renderer.domElement );
+				//controls.minDistance = 1;
+				//controls.maxDistance = 20;
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				function updateColor1( value ) {
+
+					fire.color1.set( value );
+
+				}
+
+				function updateColor2( value ) {
+
+					fire.color2.set( value );
+
+				}
+
+				function updateColor3( value ) {
+
+					fire.color3.set( value );
+
+				}
+
+				function updateColorBias( value ) {
+
+					fire.colorBias = value;
+
+				}
+
+				function updateBurnRate( value ) {
+
+					fire.burnRate = value;
+
+				}
+
+				function updateDiffuse( value ) {
+
+					fire.diffuse = value;
+
+				}
+
+				function updateViscosity( value ) {
+
+					fire.viscosity = value;
+
+				}
+
+				function updateExpansion( value ) {
+
+					fire.expansion = value;
+
+				}
+
+				function updateSwirl( value ) {
+
+					fire.swirl = value;
+
+				}
+
+				function updateDrag( value ) {
+
+					fire.drag = value;
+
+				}
+
+				function updateAirSpeed( value ) {
+
+					fire.airSpeed = value;
+
+				}
+
+				function updateWindX( value ) {
+
+					fire.windVector.x = value;
+
+				}
+
+				function updateWindY( value ) {
+
+					fire.windVector.y = value;
+
+				}
+
+				function updateSpeed( value ) {
+
+					fire.speed = value;
+
+				}
+
+				function updateMassConservation( value ) {
+
+					fire.massConservation = value;
+
+				}
+
+				params.Single = function () {
+
+					fire.clearSources();
+					fire.addSource( 0.5, 0.1, 0.1, 1.0, 0.0, 1.0 );
+
+				};
+
+				params.Multiple = function () {
+
+					fire.clearSources();
+					fire.addSource( 0.45, 0.1, 0.1, 0.5, 0.0, 1.0 );
+					fire.addSource( 0.55, 0.1, 0.1, 0.5, 0.0, 1.0 );
+
+				};
+
+				params.Text = function () {
+					var text = "Three JS";
+					var size = 180;
+					var color = "#FF0040";
+					var canvas = document.createElement( "canvas" );
+					canvas.width = 1024;
+					canvas.height = 1024;
+					var context = canvas.getContext( "2d" );
+					context.font = size + "pt Arial";
+
+					context.strokeStyle = "black";
+					context.strokeRect( 0, 0, canvas.width, canvas.height );
+					context.textAlign = "center";
+					context.textBaseline = "middle";
+					context.lineWidth = 5;
+					context.strokeStyle = color;
+					context.fillStyle = "black";
+
+					context.strokeText( text, canvas.width / 2, canvas.height * 0.75 );
+					var texture = new THREE.Texture( canvas );
+					texture.needsUpdate = true;
+
+					fire.setSourceMap( texture );
+				};
+
+				var gui = new GUI();
+				gui.add( params, 'hemiIrradiance', Object.keys( hemiLuminousIrradiances ) );
+				gui.add( params, 'bulbPower', Object.keys( bulbLuminousPowers ) );
+				gui.add( params, 'exposure', 0, 1 );
+				gui.add( params, 'shadows' );
+
+				gui.add( params, "Single" );
+				gui.add( params, "Multiple" );
+				gui.add( params, "Text" );
+
+				gui.addColor( params, 'color1' ).onChange( updateColor1 );
+				gui.addColor( params, 'color2' ).onChange( updateColor2 );
+				gui.addColor( params, 'color3' ).onChange( updateColor3 );
+				gui.add( params, 'colorBias', 0.0, 1.0 ).onChange( updateColorBias );
+				gui.add( params, 'burnRate', 0.0, 10.0 ).onChange( updateBurnRate );
+				gui.add( params, 'diffuse', 0.0, 5.0 ).step( 0.01 ).onChange( updateDiffuse );
+				gui.add( params, 'viscosity', 0.0, 5.0 ).step( 0.01 ).onChange( updateViscosity );
+				gui.add( params, 'expansion', - 1.0, 1.0 ).step( 0.01 ).onChange( updateExpansion );
+				gui.add( params, 'swirl', 0.0, 50.0 ).step( 0.01 ).onChange( updateSwirl );
+				gui.add( params, 'drag', 0.0, 1.0 ).onChange( updateDrag );
+				gui.add( params, 'airSpeed', 0.0, 50.0 ).onChange( updateAirSpeed );
+				gui.add( params, 'windX', - 5, 5 ).step( 0.01 ).onChange( updateWindX );
+				gui.add( params, 'windY', - 5, 5 ).step( 0.01 ).onChange( updateWindY );
+				gui.add( params, 'speed', 0, 1000 ).onChange( updateSpeed );
+				gui.add( params, 'massConservation' ).onChange( updateMassConservation );
+
+				function updateAll() {
+
+					updateColor1( params.color1 );
+					updateColor2( params.color2 );
+					updateColor3( params.color3 );
+					updateColorBias( params.colorBias );
+					updateBurnRate( params.burnRate );
+					updateDiffuse( params.diffuse );
+					updateViscosity( params.viscosity );
+					updateExpansion( params.expansion );
+					updateSwirl( params.swirl );
+					updateDrag( params.drag );
+					updateAirSpeed( params.airSpeed );
+					updateWindX( params.windX );
+					updateWindY( params.windY );
+					updateSpeed( params.speed );
+					updateMassConservation( params.massConservation );
+
+					for ( var i in gui.__controllers ) {
+
+						gui.__controllers[ i ].updateDisplay();
+
+					}
+
+				}
+
+				params.Candle = function () {
+
+					params.color1 = 0xffffff;
+					params.color2 = 0xffa000;
+					params.color3 = 0x000000;
+					params.windX = 0.0;
+					params.windY = 0.5;
+					params.colorBias = 0.3;
+					params.burnRate = 1.6;
+					params.diffuse = 1.33;
+					params.viscosity = 1.33;
+					params.expansion = 0.0;
+					params.swirl = 0.0;
+					params.drag = 0.0;
+					params.airSpeed = 8.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Candle' );
+
+				params.Torch = function () {
+
+					params.color1 = 0xffdcaa;
+					params.color2 = 0xffa000;
+					params.color3 = 0x000000;
+					params.windX = 0.0;
+					params.windY = 0.75;
+					params.colorBias = 0.9;
+					params.burnRate = 1.0;
+					params.diffuse = 1.33;
+					params.viscosity = 0.25;
+					params.expansion = 0.0;
+					params.swirl = 50.0;
+					params.drag = 0.35;
+					params.airSpeed = 10.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Torch' );
+
+				params.Campfire = function () {
+
+					params.color1 = 0xffffff;
+					params.color2 = 0xffa000;
+					params.color3 = 0x000000;
+					params.windX = 0.0;
+					params.windY = 0.75;
+					params.colorBias = 0.8;
+					params.burnRate = 0.3;
+					params.diffuse = 1.33;
+					params.viscosity = 0.25;
+					params.expansion = - 0.25;
+					params.swirl = 50.0;
+					params.drag = 0.35;
+					params.airSpeed = 12.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Campfire' );
+
+				params.Fireball = function () {
+
+					params.color1 = 0xffffff;
+					params.color2 = 0xffa000;
+					params.color3 = 0x000000;
+					params.windX = 0.0;
+					params.windY = 0.75;
+					params.colorBias = 0.8;
+					params.burnRate = 1.2;
+					params.diffuse = 3.0;
+					params.viscosity = 0.0;
+					params.expansion = 0.0;
+					params.swirl = 6.0;
+					params.drag = 0.0;
+					params.airSpeed = 20.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Fireball' );
+
+				params.Iceball = function () {
+
+					params.color1 = 0x00bdf7;
+					params.color2 = 0x1b3fb6;
+					params.color3 = 0x001869;
+					params.windX = 0.0;
+					params.windY = - 0.25;
+					params.colorBias = 0.25;
+					params.burnRate = 2.6;
+					params.diffuse = 5.0;
+					params.viscosity = 0.5;
+					params.expansion = 0.75;
+					params.swirl = 30.0;
+					params.drag = 0.0;
+					params.airSpeed = 40.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Iceball' );
+
+				params.Smoke = function () {
+
+					params.color1 = 0xd2d2d2;
+					params.color2 = 0xd7d7d7;
+					params.color3 = 0x000000;
+					params.windX = - 0.05;
+					params.windY = 0.15;
+					params.colorBias = 0.95;
+					params.burnRate = 0.0;
+					params.diffuse = 1.5;
+					params.viscosity = 0.25;
+					params.expansion = 0.2;
+					params.swirl = 3.75;
+					params.drag = 0.4;
+					params.airSpeed = 18.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Smoke' );
+
+				params.Cigar = function () {
+
+					params.color1 = 0xc5c5c5;
+					params.color2 = 0x787878;
+					params.color3 = 0x000000;
+					params.windX = 0.0;
+					params.windY = 0.3;
+					params.colorBias = 0.55;
+					params.burnRate = 0.0;
+					params.diffuse = 1.3;
+					params.viscosity = 0.05;
+					params.expansion = - 0.05;
+					params.swirl = 3.7;
+					params.drag = 0.6;
+					params.airSpeed = 6.0;
+					params.speed = 500.0;
+					params.massConservation = false;
+
+					updateAll();
+
+				};
+				gui.add( params, 'Cigar' );
+
+				gui.open();
+
+				params.Campfire();
+				params.Single();
+
+				//stats = new Stats();
+				//document.body.appendChild( stats.dom );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				if ( typeof TESTING !== 'undefined'  ) { for( var i = 0; i < 60; i ++ ) { renderer.render( scene, camera ); } };
+
+			}
+
+
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//
+/*
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+
+			}
+*/
+			var previousShadowMap = false;
+
+			function render() {
+
+				renderer.toneMappingExposure = Math.pow( params.exposure, 5.0 ); // to allow for very bright scenes.
+				renderer.shadowMap.enabled = params.shadows;
+				bulbLight.castShadow = params.shadows;
+				if ( params.shadows !== previousShadowMap ) {
+
+					ballMat.needsUpdate = true;
+					cubeMat.needsUpdate = true;
+					floorMat.needsUpdate = true;
+					previousShadowMap = params.shadows;
+
+	}
+				bulbLight.power = bulbLuminousPowers[ params.bulbPower ];
+				bulbMat.emissiveIntensity = bulbLight.intensity / Math.pow( 0.02, 2.0 ); // convert from intensity to irradiance at bulb surface
+
+				hemiLight.intensity = hemiLuminousIrradiances[ params.hemiIrradiance ];
+				var time = Date.now() * 0.0005;
+
+				// bulbLight.position.y = Math.cos( time ) * 0.75 + 1.25;
+				bulbLight.position.y = 2*0.75 + 1.25;
+
+				renderer.render( scene, camera );
+
+				stats.update();
+
+			}
+
+			//初始化统计对象
+			initStats();
+
+			//statsTime.begin();
+
+			let delta, clock ,isFinishLoad,camControlOver;
+			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000000  );
+			camera.position.set(-100,300,1300);
+			camera.lookAt(new THREE.Vector3(0,100,0));
+			scene = new THREE.Scene();
+			renderer = new THREE.WebGLRenderer( { antialias: false } );
+
+			init( scene, renderer, camera );
+
+			let ambientLight = new THREE.AmbientLight(0xffffff, 4);
+			scene.add(ambientLight);
+			renderer.autoClear = false;
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setClearColor( 0xF5F5F5 );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			//$("#WebGL-output").append(renderer.domElement);
+			clock = new THREE.Clock();
+			isFinishLoad = false;
+
+			camControlOver = new OrbitControls(camera, renderer.domElement);
+			camControlOver.center = new THREE.Vector3(100,100,100);
+			camControlOver.userPan = false;
+			camControlOver.autoRotate=false;
+			var pointLight1 = new THREE.PointLight( 0xffffff, 3 );
+			pointLight1.position.set( 0,300,-500 );
+			scene.add( pointLight1 );
+
+			var pointLight2 = new THREE.PointLight( 0xffffff, 3 );
+			pointLight2.position.set( 0,300,500 );
+			scene.add( pointLight2 );
+
+			var startTime = performance.now() / 1000;
+
+			let multi, meshMixer, meshMixerArr, action, modelURL, modelURL1, modelURL2, modelURL3, modelURL4, modelURL5,modelURL6, clip;
+			var statsFPS, statsMem, statsTime;
+			var endTime, xTimePanel;
+			//初始化统计对象
+			function initStats() {
+				statsFPS = new Stats();
+				statsMem = new Stats();
+				statsTime = new Stats();
+				//设置统计模式
+				statsFPS.showPanel(0);
+				statsMem.showPanel(2);
+				statsTime.showPanel(3);
+
+				//统计信息显示在左上角
+				statsFPS.domElement.style.position = 'absolute';
+				statsFPS.domElement.style.left = '0px';
+				statsFPS.domElement.style.top = '0px';
+
+				statsMem.domElement.style.position = 'absolute';
+				statsMem.domElement.style.left = '100px';
+				statsMem.domElement.style.top = '0px';
+
+				statsTime.domElement.style.position = 'absolute';
+				statsTime.domElement.style.left = '200px';
+				statsTime.domElement.style.top = '0px';
+
+				xTimePanel = statsTime.addPanel(new Stats.Panel('Sec', '#ff8', '#221'));
+
+				//将统计对象添加到对应的<div>元素中
+				document.getElementById("Stats-output").appendChild(statsFPS.domElement);
+				document.getElementById("Stats-output").appendChild(statsMem.domElement);
+				document.getElementById("Stats-output").appendChild(statsTime.domElement);
+				return stats;
+			}
+
+			function load() {
+				var multi = parseInt(document.getElementById("number").value);
+				multi = multi / 5;//总人数的1/5
+				//console.log(multi);
+				var v0 = 0.8;//Agent初始速度
+				var vmax = 1.6;//Agent最大速度
+				var fear = 0;//Agent恐慌度，0-1
+				var vt;//当前速度
+				var mixers = [];
+				var num;
+
+				var loadModelPromise = function (modelurl) {
+					return new Promise((resolve) => {
+						var loader = new GLTFLoader();
+						loader.load(modelurl, (gltf) => {       
+							resolve(gltf);
+						})
+					})
+				}
+
+				function loadBlendMeshWithPromise() {
+					meshMixerArr = [];
+					modelURL = "../Model/avatar/female_walk.glb";
+					modelURL1 = "../Model/avatar/female_walkPush.glb";
+					modelURL2 = "../Model/avatar/female_run.glb";
+					modelURL3 = "../Model/avatar/granny_walkPush.glb";
+					modelURL4 = "../Model/avatar/child_run.glb";
+					modelURL5 = "../Model/avatar/male_run.glb";
+					modelURL6 = "../Model/avatar/male_walk.glb";
+
+					var arr = new Array();
+					var arr1 = new Array();
+					var arr2 = new Array();
+					var arr3 = new Array();
+					var arr4 = new Array();
+					var arr5 = new Array();
+					var arr6 = new Array();
+
+					for (num = 0; num < 5; num++) {
+
+						arr[num] = loadModelPromise(modelURL);
+
+					}
+					// for (num = 0; num < 5; num++) {
+					//
+					//     arr1[num] = loadModelPromise(modelURL1);
+					//
+					// }
+					for (num = 0; num < 5; num++) {
+
+						arr2[num] = loadModelPromise(modelURL2);
+
+					}
+					for (num = 0; num < 2; num++) {
+
+						arr3[num] = loadModelPromise(modelURL3);
+
+					}
+					for (num = 0; num < 2; num++) {
+
+						arr4[num] = loadModelPromise(modelURL4);
+
+					}
+					for (num = 0; num < 32; num++) {
+
+						arr5[num] = loadModelPromise(modelURL5);
+
+					}
+					// for (num = 0; num < 32; num++) {
+					//
+					//     arr6[num] = loadModelPromise(modelURL6);
+					//
+					// }
+
+					function ForceGetProperty(obj, propertyName) {
+						return obj[propertyName];
+					}
+
+					THREE.SkinnedMesh.prototype.copy = function (source, recursive) {
+						// THREE.Mesh.prototype.copy.call( this, source );
+						THREE.Object3D.prototype.copy.call(this, source, recursive);
+						//this.drawMode = source.drawMode;
+						if (source.morphTargetInfluences !== undefined) {
+							this.morphTargetInfluences = source.morphTargetInfluences.slice();
+						}
+						if (source.morphTargetDictionary !== undefined) {
+							this.morphTargetDictionary = Object.assign({}, source.morphTargetDictionary);
+						}
+						//TODO:Unknown intention
+						this._sourceMeshUuid = source.uuid;
+						return this;
+					};
+					THREE.SkinnedMesh.prototype.clone = function (recursive) {
+						return new this.constructor(this.geometry, this.material).copy(this, recursive);
+					};
+
+					const cloneGltf = (gltf) => {
+						const clone = {
+							animations: gltf.animations,
+							scene: gltf.scene.clone(true)
+						};
+						const skinnedMeshes = {};
+						gltf.scene.traverse((node) => {
+							if (ForceGetProperty(node, "isSkinnedMesh")) {
+								skinnedMeshes[node.uuid] = node;
+							}
+						});
+						// console.log(skinnedMeshes);
+						const cloneBones = {};
+						const cloneSkinnedMeshes = {};
+						clone.scene.traverse((node) => {
+							if (ForceGetProperty(node, "isBone")) {
+								cloneBones[node.name] = node;
+							}
+							if (ForceGetProperty(node, "isSkinnedMesh")) {
+								cloneSkinnedMeshes[node.uuid] = node;
+							}
+						});
+						// console.log(cloneBones);
+						// console.log(cloneSkinnedMeshes);
+						for (let uuid in cloneSkinnedMeshes) {
+							const cloneSkinnedMesh = cloneSkinnedMeshes[uuid];
+							// console.log(cloneSkinnedMeshes);
+							const skinnedMesh = skinnedMeshes[cloneSkinnedMesh._sourceMeshUuid];
+							if (skinnedMesh === null) {
+								continue;
+							}
+							// console.log(skinnedMesh);
+							const skeleton = skinnedMesh.skeleton;
+							const orderedCloneBones = [];
+							for (let i = 0; i < skeleton.bones.length; ++i) {
+								const cloneBone = cloneBones[skeleton.bones[i].name];
+								orderedCloneBones.push(cloneBone);
+							}
+							cloneSkinnedMesh.bind(new THREE.Skeleton(orderedCloneBones, skeleton.boneInverses), cloneSkinnedMesh.matrixWorld);
+						}
+						return clone;
+					};
+
+					var promiseAll = Promise.all(arr).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 5;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 5 === 0) {
+								textureURL = '../Model/avatar/texture/business01_f_30.jpg';
+							}
+							if (i % 5 === 1) {
+								textureURL = '../Model/avatar/texture/business02_f_50.jpg';
+							}
+							if (i % 5 === 2) {
+								textureURL = '../Model/avatar/texture/business03_f_25.jpg';
+							}
+							if (i % 5 === 3) {
+								textureURL = '../Model/avatar/texture/business04_f_25.jpg';
+							}
+							if (i % 5 === 4) {
+								textureURL = '../Model/avatar/texture/business05_f_35.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()* 2/multi;
+							var upperRandom1 = 1 + Math.random()*2/multi;
+							var upperRandom2 = 1 + Math.random()*2/multi;
+							var thighRandom = 1 + Math.random()*2/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[4];
+							var head1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[2];
+							var chest1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[1];
+							var wist1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[22];
+							var lThigh11 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[23];
+							var lThigh21 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[27];
+							var rThigh11 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[28];
+							var rThigh21 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							head1.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							chest0.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							chest1.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							wist1.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+
+							//动态人群位置
+							var distance = Math.random() * 20;
+							var num = Math.floor(Math.random() * 2 + 1);
+							var num1 = Math.floor(Math.random() * 2 + 1);
+							// newMesh.scene.position.set(i * 100-500, 0, 200);
+							if(num==0) {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else{
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+							else {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].children[0].material = material;
+							newMesh.scene.children[0].children[2].children[1].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr2).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 5;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 5 === 0) {
+								textureURL = '../Model/avatar/texture/business01_f_30.jpg';
+							}
+							if (i % 5 === 1) {
+								textureURL = '../Model/avatar/texture/business02_f_50.jpg';
+							}
+							if (i % 5 === 2) {
+								textureURL = '../Model/avatar/texture/business03_f_25.jpg';
+							}
+							if (i % 5 === 3) {
+								textureURL = '../Model/avatar/texture/business04_f_25.jpg';
+							}
+							if (i % 5 === 4) {
+								textureURL = '../Model/avatar/texture/business05_f_35.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+                            //人物骨骼参数化
+							var headRandom =1 +  Math.random()* 2/multi;
+							var upperRandom1 = 1 + Math.random()*2/multi;
+							var upperRandom2 = 1 + Math.random()*2/multi;
+							var thighRandom = 1 + Math.random()*2/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[4];
+							var head1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[2];
+							var chest1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[1];
+							var wist1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[22];
+							var lThigh11 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[23];
+							var lThigh21 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[27];
+							var rThigh11 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[28];
+							var rThigh21 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							head1.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							chest0.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							chest1.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							wist1.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							//动态人群位置
+							var distance = Math.random() * 20;
+							var num = Math.floor(Math.random() * 2 + 1);
+							var num1 = Math.floor(Math.random() * 2 + 1);
+							// newMesh.scene.position.set(i * 100-500, 0, 200);
+							if(num==0) {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else{
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+							else {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].children[0].material = material;
+							newMesh.scene.children[0].children[2].children[1].material = material;
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr3).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 2;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 2 === 0) {
+								textureURL = '../Model/avatar/texture/granny01.jpg';
+							}
+							if (i % 2 === 1) {
+								textureURL = '../Model/avatar/texture/granny02.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()*1.2/multi;
+							var upperRandom1 = 1 + Math.random()/multi;
+							var upperRandom2 = 1 + Math.random()*1.5/multi;
+							var thighRandom = 1 + Math.random()/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							chest0.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+
+							//动态人群位置
+							var distance = Math.random() * 20;
+							var num = Math.floor(Math.random() * 2 + 1);
+							var num1 = Math.floor(Math.random() * 2 + 1);
+							// newMesh.scene.position.set(i * 100-500, 0, 200);
+							if(num==0) {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else{
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+							else {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr4).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 2;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 2 === 0) {
+								textureURL = '../Model/avatar/texture/child01_m.jpg';
+							}
+							if (i % 2 === 1) {
+								textureURL = '../Model/avatar/texture/child02_m.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()/multi;
+							var upperRandom1 = 1 + Math.random()/multi;
+							var upperRandom2 = 1 + Math.random()/multi;
+							var thighRandom = 1 + Math.random()/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/15, headRandom));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/20, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+
+
+							//动态人群位置
+							var distance = Math.random() * 20;
+							var num = Math.floor(Math.random() * 2 + 1);
+							var num1 = Math.floor(Math.random() * 2 + 1);
+							// newMesh.scene.position.set(i * 100-500, 0, 200);
+							if(num==0) {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else{
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+							else {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].material = material;
+							newMesh.scene.children[0].children[2].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr5).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 32;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 32 === 0) {
+								textureURL = '../Model/avatar/texture/casual01_m_35.jpg';
+							}
+							if (i % 32 === 1) {
+								textureURL = '../Model/avatar/texture/casual02_m_25.jpg';
+							}
+							if (i % 32 === 2) {
+								textureURL = '../Model/avatar/texture/casual03_m_25.jpg';
+							}
+							if (i % 32 === 3) {
+								textureURL = '../Model/avatar/texture/casual04_m_25.jpg';
+							}
+							if (i % 32 === 4) {
+								textureURL = '../Model/avatar/texture/casual05_m_35.jpg';
+							}
+							if (i % 32 === 5) {
+								textureURL = '../Model/avatar/texture/casual06_m_25.jpg';
+							}
+							if (i % 32 === 6) {
+								textureURL = '../Model/avatar/texture/casual07_m_25.jpg';
+							}
+							if (i % 32 === 7) {
+								textureURL = '../Model/avatar/texture/casual08_m_30.jpg';
+							}
+							if (i % 32 === 8) {
+								textureURL = '../Model/avatar/texture/casual09_m_30.jpg';
+							}
+							if (i % 32 === 9) {
+								textureURL = '../Model/avatar/texture/casual10_m_30.jpg';
+							}
+							if (i % 32 === 10) {
+								textureURL = '../Model/avatar/texture/casual11_m_30.jpg';
+							}
+							if (i % 32 === 11) {
+								textureURL = '../Model/avatar/texture/casual12_m_30.jpg';
+							}
+							if (i % 32 === 12) {
+								textureURL = '../Model/avatar/texture/casual13_m_30.jpg';
+							}
+							if (i % 32 === 13) {
+								textureURL = '../Model/avatar/texture/casual14_m_30.jpg';
+							}
+							if (i % 32 === 14) {
+								textureURL = '../Model/avatar/texture/casual15_m_30.jpg';
+							}
+							if (i % 32 === 15) {
+								textureURL = '../Model/avatar/texture/casual16_m_35.jpg';
+							}
+							if (i % 32 === 16) {
+								textureURL = '../Model/avatar/texture/casual17_m_35.jpg';
+							}
+							if (i % 32 === 17) {
+								textureURL = '../Model/avatar/texture/casual18_m_35.jpg';
+							}
+							if (i % 32 === 18) {
+								textureURL = '../Model/avatar/texture/casual19_m_35.jpg';
+							}
+							if (i % 32 === 19) {
+								textureURL = '../Model/avatar/texture/casual20_m_20.jpg';
+							}
+							if (i % 32 === 20) {
+								textureURL = '../Model/avatar/texture/casual21_m_35.jpg';
+							}
+							if (i % 32 === 21) {
+								textureURL = '../Model/avatar/texture/casual22_m_35.jpg';
+							}
+							if (i % 32 === 22) {
+								textureURL = '../Model/avatar/texture/casual23_m_40.jpg';
+							}
+							if (i % 32 === 23) {
+								textureURL = '../Model/avatar/texture/casual24_m_40.jpg';
+							}
+							if (i % 32 === 24) {
+								textureURL = '../Model/avatar/texture/casual25_m_40.jpg';
+							}
+							if (i % 32 === 25) {
+								textureURL = '../Model/avatar/texture/casual26_m_40.jpg';
+							}
+							if (i % 32 === 26) {
+								textureURL = '../Model/avatar/texture/casual27_m_70.jpg';
+							}
+							if (i % 32 === 27) {
+								textureURL = '../Model/avatar/texture/casual28_m_70.jpg';
+							}
+							if (i % 32 === 28) {
+								textureURL = '../Model/avatar/texture/casual29_m_70.jpg';
+							}
+							if (i % 32 === 29) {
+								textureURL = '../Model/avatar/texture/casual30_m_30.jpg';
+							}
+							if (i % 32 === 30) {
+								textureURL = '../Model/avatar/texture/casual31_m_30.jpg';
+							}
+							if (i % 32 === 31) {
+								textureURL = '../Model/avatar/texture/casual32_m_25.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()*3/multi;
+							var upperRandom1 = 1 + Math.random()*3/multi;
+							var upperRandom2 = 1 + Math.random()*4/multi;
+							var thighRandom = 1 + Math.random()*2/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/6, headRandom));
+							chest0.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/10, upperRandom1));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+
+							//动态人群位置
+							var distance = Math.random() * 20;
+							var num = Math.floor(Math.random() * 2 + 1);
+							var num1 = Math.floor(Math.random() * 2 + 1);
+							// newMesh.scene.position.set(i * 100-500, 0, 200);
+							if(num==0) {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else{
+									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+							else {
+								if (num1 == 0) {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
+								}
+								else {
+									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
+								}
+							}
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].material = material;
+							newMesh.scene.children[0].children[2].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+				}
+
+
+
+				loadBlendMeshWithPromise();
+
+				//动画随机速度，除去速度为0的情况
+				function activateAction(action) {
+					var num = Math.floor(Math.random() * 2 + 1);
+					switch (num) {
+						case 1:
+							setWeight(action, 1);
+							break;
+						case 2:
+							//setWeight( action, 0 );
+							break;
+					}
+					action.play();
+				}
+
+				function setWeight(action, weight) {
+					action.enabled = true;
+					var num = 0;
+					while (num == 0) {
+						num = Math.floor(Math.random() * 8 + 0.8);
+						// num = Math.random();
+					}
+					// v0 += num / 4;
+					// vmax += num / 4;
+					// fear += second / 60;
+					// vt = (1 - fear) * v0 + fear * vmax;//恐慌心理导致的Agent速度变化
+					action.setEffectiveTimeScale(num / 3);//值越大速度越快，默认为1，0时动画停止
+					action.setEffectiveWeight(weight);
+				}
+
+
+				//var time;
+
+				function animate() {
+
+					delta = clock.getDelta();
+					camControlOver.update(delta);
+					requestAnimationFrame(animate);
+					for (var i = 0; i < mixers.length; i++) { // 重复播放动画
+						mixers[i].update(delta);
+					}
+					//通知stats画面已被重新渲染了
+					statsFPS.update();
+					statsMem.update();
+					statsTime.update();
+					renderer.clear();
+					renderer.render(scene, camera);
+
+					endTime = performance.now() / 1000;
+					xTimePanel.update(endTime-startTime, 460);
+				}
+
+				animate();
+			}
+		</script>
+	</body>
+</html>

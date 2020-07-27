@@ -26,24 +26,6 @@
     "example": "examples",
     "test": "test"
   },
-  "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
-    "extends": "mdcs",
-    "plugins": [
-      "html",
-      "@typescript-eslint"
-    ],
-    "rules": {
-      "@typescript-eslint/no-unused-vars": 1,
-      "@typescript-eslint/indent": [
-        "error",
-        "tab",
-        {
-          "SwitchCase": 1
-        }
-      ]
-    }
-  },
   "scripts": {
     "start": "npm run dev",
     "build": "rollup -c utils/build/rollup.config.js",
