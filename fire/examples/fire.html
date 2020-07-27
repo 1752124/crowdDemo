@@ -9,6 +9,7 @@
 		<script type="text/javascript" src="../lib/three.js"></script>
 		<script type="text/javascript" src="../lib/stats.js"></script>
 		<script type="text/javascript" src="../lib/jquery-1.8.2.js"></script>
+		<script src="../lib/astar.js"></script>
 		<script src="../lib/DRACOLoader.js"></script>
 		<script src="../lib/GLTFLoader.js"></script>
 		<script src="../lib/MyOrbitControls.js"></script>
@@ -37,7 +38,7 @@
 				bulbLight, bulbMat, hemiLight, stats;
 			var ballMat, cubeMat, floorMat;
 			var fire;
-			
+
 			window.load = load;
 
 			// ref for lumens: http://www.power-sure.com/lumens.htm
@@ -262,11 +263,173 @@
 
 	} );
 
-				var floorGeometry = new THREE.PlaneBufferGeometry( 20000, 20000 );
-				var floorMesh = new THREE.Mesh( floorGeometry, floorMat );
-				floorMesh.receiveShadow = true;
-				floorMesh.rotation.x = - Math.PI / 2.0;
-				scene.add( floorMesh );
+//////////////////////////////////////////////// 寻路 ////////////////////////////////////////////////
+
+				//设置地板
+				let geometry = new THREE.Geometry();
+				let lineLength = 7500;
+				let gridLength =150;
+				let gridTimes = lineLength/gridLength;
+				geometry.vertices.push( new THREE.Vector3( - lineLength/2, 0, 0 ) );
+				geometry.vertices.push( new THREE.Vector3( lineLength/2, 0, 0 ) );
+				for ( let i = 0; i <= gridTimes; i ++ ) {
+
+					let line1 = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
+					line1.position.z = ( i * gridLength ) - lineLength/2;
+					scene.add( line1 );
+
+					let line2 = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x000000, opacity: 1 } ) );
+					line2.position.x = ( i * gridLength ) - lineLength/2;
+					line2.rotation.y = 90 * Math.PI / 180;
+					scene.add( line2 );
+
+				}
+
+				//设置背景
+				let skyBoxGeometry = new THREE.CubeGeometry( 1000000, 1000000, 1000000 );
+				let skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, side: THREE.BackSide } );
+				let skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+				scene.add(skyBox);
+				let graph = [];
+				for(let i =0;i<gridTimes;i++)
+				{
+					let node = [];
+					for(let j =0;j<gridTimes;j++) {
+						node.push(1);
+					}
+					graph.push(node);
+				}
+
+				//获得点击坐标
+				let resultArray = [];
+				let raycaster = new THREE.Raycaster();
+				let mouse = new THREE.Vector2();
+				let groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+				function pickupObjects(e){
+					//将鼠标点击位置的屏幕坐标转成threejs中的标准坐标
+					mouse.x = (e.clientX/window.innerWidth)*2 -1;
+					mouse.y = -(e.clientY/window.innerHeight)*2 + 1;
+					//从相机发射一条射线，经过鼠标点击位置
+					raycaster.setFromCamera(mouse,camera);
+					//计算射线相机到的对象，可能有多个对象，因此返回的是一个数组，按离相机远近排列
+					let ray=raycaster.ray;
+					let intersects = ray.intersectPlane(groundPlane);
+					let x=intersects.x;
+					let z=intersects.z;
+					let k,m;
+					for(let i=-lineLength/2;i<lineLength/2;i+=gridLength){
+						if(x>=i&&x<i+gridLength){
+							k=i+gridLength/2;
+							break;
+						}
+					}
+					for(let j=-lineLength/2;j<lineLength/2;j+=gridLength){
+						if(z>=j&&z<j+gridLength){
+							m=j+gridLength/2;
+							break;
+						}
+					}
+					initSphere(k,m);
+				}
+
+				document.addEventListener('click',pickupObjects,false);
+				let isCaculate=false;
+
+				function cleanSphere(){
+					let child=scene.children;
+					for(let i=0;i<child.length;i++){
+						//if(child[i].geometry instanceof THREE.CubeGeometry)
+						if(child[i].name === "cube"||child[i].name === "cube1")
+						{
+							scene.remove(child[i]);
+							i--;
+						}
+					}
+					isCaculate=false;
+				}
+
+				//设定起点终点
+				function initSphere(x,z){
+					cleanSphere();
+					if(resultArray.length>1)
+						resultArray = [];
+					if(resultArray.length === 0){
+						let geometry = new THREE.CubeGeometry( 145, 1, 145 );
+						let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+						let sphere = new THREE.Mesh( geometry, material );
+						sphere.position.x=75;
+						sphere.position.y=5;
+						sphere.position.z=75;
+						sphere.name="cube1";
+						resultArray.push(sphere);
+						let sphere2 = new THREE.Mesh( geometry, material );
+						sphere2.position.x=x;
+						sphere2.position.y=5;
+						sphere2.position.z=z;
+						sphere2.name="cube1";
+						scene.add( sphere2 );
+						resultArray.push(sphere2);
+						caculatePath(resultArray);
+						isCaculate=true;
+						resultArray=[];
+						resultArray.push(sphere2);
+					}
+					if(resultArray[0].position.x !== x && resultArray[0].position.z !== z){
+						let geometry = new THREE.CubeGeometry( 145, 1, 145 );
+						let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+						let sphere = new THREE.Mesh( geometry, material );
+						sphere.position.x=x;
+						sphere.position.y=5;
+						sphere.position.z=z;
+						sphere.name="cube1";
+						resultArray.push(sphere);
+						scene.add( sphere );
+						caculatePath(resultArray);
+						isCaculate=true;
+						resultArray=[];
+						resultArray.push(sphere);
+					}
+
+					function caculatePath(resultArray){
+
+						//console.log(resultArray);
+						let maps = new Graph(graph);
+						let startX=(resultArray[0].position.z-gridLength/2+lineLength/2)/gridLength;
+						let startY=(resultArray[0].position.x-gridLength/2+lineLength/2)/gridLength;
+						let endX=(resultArray[1].position.z-gridLength/2+lineLength/2)/gridLength;
+						let endY=(resultArray[1].position.x-gridLength/2+lineLength/2)/gridLength;
+						let start = maps.grid[startX][startY];
+						let end = maps.grid[endX][endY];
+						let result = astar.search(maps, start, end);
+						if(result.length===0){
+							alert("无可到达路径");
+							cleanSphere();
+							return;
+						}
+						let timesRun = 0;
+						let interval = setInterval(function(){
+							let geometry = new THREE.CubeGeometry( 145, 1, 145 );
+							let material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+							let cube = new THREE.Mesh( geometry, material );
+							cube.name = "cube";
+							cube.position.x=result[timesRun].y*gridLength-lineLength/2+gridLength/2;
+							cube.position.y=5;
+							cube.position.z=result[timesRun].x*gridLength-lineLength/2+gridLength/2;
+							scene.add(cube);
+							timesRun += 1;
+							if(timesRun === result.length){
+								clearInterval(interval);
+							}
+						}, 200);
+
+					}
+					//console.log(reslutArray);
+
+				}
+				//scene.fog = new THREE.FogExp2( 0xFFFFFF, 0.00025 );
+
+//////////////////////////////////////////////// 寻路 ////////////////////////////////////////////////
+
 
 				//renderer = new THREE.WebGLRenderer();
 				renderer.physicallyCorrectLights = true;
