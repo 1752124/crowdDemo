@@ -41,6 +41,13 @@
 			var ballMat, cubeMat, floorMat;
 			var fire;
 
+			var smokeArr = [];
+			var smokeTexture = new THREE.TextureLoader().load('textures/smoke/Smoke-Element.png');
+			var sv = 1/10,sv1=10,sv2=40;
+			var initI = 2,initJ = 0,initK = 1;
+			var smokeStep = 0;
+
+
 			window.load = load;
 
 			// ref for lumens: http://www.power-sure.com/lumens.htm
@@ -264,6 +271,54 @@
 					ballMat.needsUpdate = true;
 
 	} );
+
+//////////////////////////////////////////////// 烟雾 ////////////////////////////////////////////////
+
+				function smokeSceneType()
+				{
+					var geom=new THREE.Geometry();//创建烟雾团
+					//创建烟雾素材
+					var material=new THREE.PointsMaterial({
+						size:2400,
+						transparent:true,
+						opacity:0,
+						map:smokeTexture,
+						sizeAttenuation:true,
+						depthWrite:false,
+						color:0xffffff
+					});
+					//var range=15;
+					for(var i=0;i<50;i++){
+						//创建烟雾片
+						var particle=new THREE.Vector3(Math.random()*1500-1500/2,Math.random()*600-600/2,Math.random()*1500-1500/2);
+						//将烟雾片一片片加入到geom中
+						geom.vertices.push(particle);
+					}
+					var cloud=new THREE.Points(geom,material);
+					scene.add(cloud);
+					smokeArr.push(cloud);
+				};
+
+				function smokeScene(){
+					for(var i=0;i<50;i++){
+						smokeSceneType();
+					}
+					for(var i=0;i<5;i++)
+						for(var j=0;j<5;j++)
+							for(var k=0;k<2;k++)
+					{
+						smokeArr[i+j*5+k*25].position.set( i*1500-3000,500+k*1000,j*1500-3000 );
+						smokeArr[i+j*5+k*25].visible = false;
+					}
+				};
+
+				smokeSceneType();
+				smokeScene();
+
+
+
+
+//////////////////////////////////////////////// 烟雾 ////////////////////////////////////////////////
 
 //////////////////////////////////////////////// 寻路 ////////////////////////////////////////////////
 
@@ -1025,7 +1080,7 @@
 				var loadModelPromise = function (modelurl) {
 					return new Promise((resolve) => {
 						var loader = new GLTFLoader();
-						loader.load(modelurl, (gltf) => {       
+						loader.load(modelurl, (gltf) => {
 							resolve(gltf);
 						})
 					})
@@ -1772,6 +1827,25 @@
 					action.setEffectiveWeight(weight);
 				}
 
+				function smokeUpdate(){
+					var smokeTime = clock.getElapsedTime();
+					var opacity = 0;
+					for(var i=0;i<5;i++)
+						for(var j=0;j<5;j++)
+							for(var k=0;k<2;k++)
+							{
+								opacity = sv * (smokeTime - sv1 * (Math.abs(i-initI)+Math.abs(j-initJ)) - sv2 * (Math.abs(k-initK)));
+								if(opacity>0) {
+									smokeArr[i + j * 5 + k * 25].visible = true;
+									smokeArr[i + j * 5 + k * 25].material.opacity = Math.min(opacity,1);
+								}
+							}
+					smokeArr.forEach(function (child)
+					{
+						smokeStep += 0.0001;
+						child.rotation.y=smokeStep*(Math.random>0.5?1:-1);
+					});
+				};
 
 				//var time;
 
@@ -1783,6 +1857,8 @@
 					for (var i = 0; i < mixers.length; i++) { // 重复播放动画
 						mixers[i].update(delta);
 					}
+
+					smokeUpdate();
 					//通知stats画面已被重新渲染了
 					statsFPS.update();
 					statsMem.update();
