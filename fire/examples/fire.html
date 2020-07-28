@@ -1068,7 +1068,8 @@
 
 			function load() {
 				var multi = parseInt(document.getElementById("number").value);
-				multi = multi / 5;//总人数的1/5
+				var surplus = multi % 7;
+				multi = Math.floor(multi / 7);//总人数的1/5
 				//console.log(multi);
 				var v0 = 0.8;//Agent初始速度
 				var vmax = 1.6;//Agent最大速度
@@ -1088,11 +1089,11 @@
 
 				function loadBlendMeshWithPromise() {
 					meshMixerArr = [];
-					modelURL = "../Model/avatar/female_walk.glb";
-					modelURL1 = "../Model/avatar/female_walkPush.glb";
-					modelURL2 = "../Model/avatar/female_run.glb";
-					modelURL3 = "../Model/avatar/granny_walkPush.glb";
-					modelURL4 = "../Model/avatar/child_run.glb";
+					modelURL = "../Model/avatar/female_run.glb";
+					modelURL1 = "../Model/avatar/child_run.glb";
+					modelURL2 = "../Model/avatar/female_walk.glb";
+					modelURL3 = "../Model/avatar/female_walkPush.glb";
+					modelURL4 = "../Model/avatar/granny_walkPush.glb";
 					modelURL5 = "../Model/avatar/male_run.glb";
 					modelURL6 = "../Model/avatar/male_walk.glb";
 
@@ -1109,17 +1110,17 @@
 						arr[num] = loadModelPromise(modelURL);
 
 					}
-					// for (num = 0; num < 5; num++) {
-					//
-					//     arr1[num] = loadModelPromise(modelURL1);
-					//
-					// }
+					for (num = 0; num < 2; num++) {
+
+						arr1[num] = loadModelPromise(modelURL1);
+
+					}
 					for (num = 0; num < 5; num++) {
 
 						arr2[num] = loadModelPromise(modelURL2);
 
 					}
-					for (num = 0; num < 2; num++) {
+					for (num = 0; num < 5; num++) {
 
 						arr3[num] = loadModelPromise(modelURL3);
 
@@ -1134,11 +1135,11 @@
 						arr5[num] = loadModelPromise(modelURL5);
 
 					}
-					// for (num = 0; num < 32; num++) {
-					//
-					//     arr6[num] = loadModelPromise(modelURL6);
-					//
-					// }
+					for (num = 0; num < 32; num++) {
+
+						arr6[num] = loadModelPromise(modelURL6);
+
+					}
 
 					function ForceGetProperty(obj, propertyName) {
 						return obj[propertyName];
@@ -1208,6 +1209,175 @@
 					var promiseAll = Promise.all(arr).then((data) => {
 
 						var temp;
+						for (var i = 0; i < (multi + surplus); i++) {
+
+							temp = i % 5;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 5 === 0) {
+								textureURL = '../Model/avatar/texture/business01_f_30.jpg';
+							}
+							if (i % 5 === 1) {
+								textureURL = '../Model/avatar/texture/business02_f_50.jpg';
+							}
+							if (i % 5 === 2) {
+								textureURL = '../Model/avatar/texture/business03_f_25.jpg';
+							}
+							if (i % 5 === 3) {
+								textureURL = '../Model/avatar/texture/business04_f_25.jpg';
+							}
+							if (i % 5 === 4) {
+								textureURL = '../Model/avatar/texture/business05_f_35.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()* 2/multi;
+							var upperRandom1 = 1 + Math.random()*2/multi;
+							var upperRandom2 = 1 + Math.random()*2/multi;
+							var thighRandom = 1 + Math.random()*2/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[4];
+							var head1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[2];
+							var chest1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[1];
+							var wist1 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[22];
+							var lThigh11 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[23];
+							var lThigh21 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[27];
+							var rThigh11 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].children[0].skeleton.boneInverses[28];
+							var rThigh21 = newMesh.scene.children[0].children[2].children[1].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							head1.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/8, headRandom));
+							chest0.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							chest1.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/20, upperRandom1));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							wist1.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+
+							//动态人群位置
+							var distance = Math.random() * 1500;
+							var distance1 = Math.random() * 1700;
+							newMesh.scene.position.set(distance-800, 0, distance1+800);
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].children[0].material = material;
+							newMesh.scene.children[0].children[2].children[1].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr1).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 2;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 2 === 0) {
+								textureURL = '../Model/avatar/texture/child01_m.jpg';
+							}
+							if (i % 2 === 1) {
+								textureURL = '../Model/avatar/texture/child02_m.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()/multi;
+							var upperRandom1 = 1 + Math.random()/multi;
+							var upperRandom2 = 1 + Math.random()/multi;
+							var thighRandom = 1 + Math.random()/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/15, headRandom));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/20, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+
+							//动态人群位置
+							var distance = Math.random() * 1500;
+							var distance1 = Math.random() * 1700;
+							newMesh.scene.position.set(distance-800, 0, distance1+800);
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
+							newMesh.scene.children[0].children[2].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr2).then((data) => {
+
+						var temp;
 						for (var i = 0; i < multi; i++) {
 
 							temp = i % 5;
@@ -1273,26 +1443,9 @@
 							lThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
 
 							//动态人群位置
-							var distance = Math.random() * 20;
-							var num = Math.floor(Math.random() * 2 + 1);
-							var num1 = Math.floor(Math.random() * 2 + 1);
-							// newMesh.scene.position.set(i * 100-500, 0, 200);
-							if(num==0) {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else{
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
-							else {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
+							var distance = Math.random() * 1900;
+							var distance1 = Math.random() * 2400;
+							newMesh.scene.position.set(distance-1100, 0, distance1-1700);
 
 							// 将模型的材质附在newMesh上
 							var loader = new THREE.TextureLoader();
@@ -1307,7 +1460,6 @@
 							material.map = texture;
 							newMesh.scene.children[0].children[2].children[0].material = material;
 							newMesh.scene.children[0].children[2].children[1].material = material;
-
 							// 调用动画
 							meshMixer = new THREE.AnimationMixer(newMesh.scene);
 							action = meshMixer.clipAction(newMesh.animations[0]);
@@ -1319,7 +1471,7 @@
 						}
 					});
 
-					var promiseAll = Promise.all(arr2).then((data) => {
+					var promiseAll = Promise.all(arr3).then((data) => {
 
 						var temp;
 						for (var i = 0; i < multi; i++) {
@@ -1349,7 +1501,8 @@
 
 							isFinishLoad = true;
 							newMesh.scene.scale.set(150, 150, 150);
-                            //人物骨骼参数化
+
+							//人物骨骼参数化
 							var headRandom =1 +  Math.random()* 2/multi;
 							var upperRandom1 = 1 + Math.random()*2/multi;
 							var upperRandom2 = 1 + Math.random()*2/multi;
@@ -1384,27 +1537,11 @@
 							lThigh11.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
 							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
 							lThigh21.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
+
 							//动态人群位置
-							var distance = Math.random() * 20;
-							var num = Math.floor(Math.random() * 2 + 1);
-							var num1 = Math.floor(Math.random() * 2 + 1);
-							// newMesh.scene.position.set(i * 100-500, 0, 200);
-							if(num==0) {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else{
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
-							else {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
+							var distance = Math.random() * 2200;
+							var distance1 = Math.random() * 2400;
+							newMesh.scene.position.set(distance-1100, 0, distance1-1700);
 
 							// 将模型的材质附在newMesh上
 							var loader = new THREE.TextureLoader();
@@ -1419,6 +1556,7 @@
 							material.map = texture;
 							newMesh.scene.children[0].children[2].children[0].material = material;
 							newMesh.scene.children[0].children[2].children[1].material = material;
+
 							// 调用动画
 							meshMixer = new THREE.AnimationMixer(newMesh.scene);
 							action = meshMixer.clipAction(newMesh.animations[0]);
@@ -1430,7 +1568,7 @@
 						}
 					});
 
-					var promiseAll = Promise.all(arr3).then((data) => {
+					var promiseAll = Promise.all(arr4).then((data) => {
 
 						var temp;
 						for (var i = 0; i < multi; i++) {
@@ -1475,26 +1613,9 @@
 							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
 
 							//动态人群位置
-							var distance = Math.random() * 20;
-							var num = Math.floor(Math.random() * 2 + 1);
-							var num1 = Math.floor(Math.random() * 2 + 1);
-							// newMesh.scene.position.set(i * 100-500, 0, 200);
-							if(num==0) {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else{
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
-							else {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
+							var distance = Math.random() * 2200;
+							var distance1 = Math.random() * 2400;
+							newMesh.scene.position.set(distance-1100, 0, distance1-1700);
 
 							// 将模型的材质附在newMesh上
 							var loader = new THREE.TextureLoader();
@@ -1507,97 +1628,6 @@
 							texture.repeat.set(1, 1);
 							material.skinning = true;
 							material.map = texture;
-							newMesh.scene.children[0].children[2].material = material;
-
-							// 调用动画
-							meshMixer = new THREE.AnimationMixer(newMesh.scene);
-							action = meshMixer.clipAction(newMesh.animations[0]);
-							mixers.push(meshMixer);
-							activateAction(action);
-
-							scene.add(newMesh.scene);
-
-						}
-					});
-
-					var promiseAll = Promise.all(arr4).then((data) => {
-
-						var temp;
-						for (var i = 0; i < multi; i++) {
-
-							temp = i % 2;
-							var newMesh, textureURL;
-							newMesh = cloneGltf(data[temp]);
-							console.log(newMesh);
-							console.log(i);
-
-							//贴图参数化
-							if (i % 2 === 0) {
-								textureURL = '../Model/avatar/texture/child01_m.jpg';
-							}
-							if (i % 2 === 1) {
-								textureURL = '../Model/avatar/texture/child02_m.jpg';
-							}
-
-							isFinishLoad = true;
-							newMesh.scene.scale.set(150, 150, 150);
-
-							//人物骨骼参数化
-							var headRandom =1 +  Math.random()/multi;
-							var upperRandom1 = 1 + Math.random()/multi;
-							var upperRandom2 = 1 + Math.random()/multi;
-							var thighRandom = 1 + Math.random()/multi;
-
-							var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
-							var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
-							var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[1];
-							var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[22];
-							var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[23];
-							var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[27];
-							var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[28];
-
-							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/15, headRandom));
-							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/20, upperRandom2));
-							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
-							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
-							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
-							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/5, thighRandom));
-
-
-							//动态人群位置
-							var distance = Math.random() * 20;
-							var num = Math.floor(Math.random() * 2 + 1);
-							var num1 = Math.floor(Math.random() * 2 + 1);
-							// newMesh.scene.position.set(i * 100-500, 0, 200);
-							if(num==0) {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else{
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
-							else {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
-
-							// 将模型的材质附在newMesh上
-							var loader = new THREE.TextureLoader();
-							var texture = loader.load(textureURL, function () {
-							});
-							var material = new THREE.MeshStandardMaterial();
-							texture.anisotropy = renderer.getMaxAnisotropy();
-							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-							texture.flipY = false;
-							texture.repeat.set(1, 1);
-							material.skinning = true;
-							material.map = texture;
-							newMesh.scene.children[0].children[2].material = material;
 							newMesh.scene.children[0].children[2].material = material;
 
 							// 调用动画
@@ -1746,26 +1776,9 @@
 							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
 
 							//动态人群位置
-							var distance = Math.random() * 20;
-							var num = Math.floor(Math.random() * 2 + 1);
-							var num1 = Math.floor(Math.random() * 2 + 1);
-							// newMesh.scene.position.set(i * 100-500, 0, 200);
-							if(num==0) {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else{
-									newMesh.scene.position.set((i % 3 + distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
-							else {
-								if (num1 == 0) {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) + distance) * 100 + 100);
-								}
-								else {
-									newMesh.scene.position.set((i % 3 - distance/2) * 100, thighRandom * 100 - 100, (Math.floor(i / 3) - distance) * 100 + 100);
-								}
-							}
+							var distance = Math.random() * 1500;
+							var distance1 = Math.random() * 1500;
+							newMesh.scene.position.set(distance-800, 0, distance1-2950);
 
 							// 将模型的材质附在newMesh上
 							var loader = new THREE.TextureLoader();
@@ -1779,6 +1792,168 @@
 							material.skinning = true;
 							material.map = texture;
 							newMesh.scene.children[0].children[2].material = material;
+
+							// 调用动画
+							meshMixer = new THREE.AnimationMixer(newMesh.scene);
+							action = meshMixer.clipAction(newMesh.animations[0]);
+							mixers.push(meshMixer);
+							activateAction(action);
+
+							scene.add(newMesh.scene);
+
+						}
+					});
+
+					var promiseAll = Promise.all(arr6).then((data) => {
+
+						var temp;
+						for (var i = 0; i < multi; i++) {
+
+							temp = i % 32;
+							var newMesh, textureURL;
+							newMesh = cloneGltf(data[temp]);
+							console.log(newMesh);
+							console.log(i);
+
+							//贴图参数化
+							if (i % 32 === 0) {
+								textureURL = '../Model/avatar/texture/casual01_m_35.jpg';
+							}
+							if (i % 32 === 1) {
+								textureURL = '../Model/avatar/texture/casual02_m_25.jpg';
+							}
+							if (i % 32 === 2) {
+								textureURL = '../Model/avatar/texture/casual03_m_25.jpg';
+							}
+							if (i % 32 === 3) {
+								textureURL = '../Model/avatar/texture/casual04_m_25.jpg';
+							}
+							if (i % 32 === 4) {
+								textureURL = '../Model/avatar/texture/casual05_m_35.jpg';
+							}
+							if (i % 32 === 5) {
+								textureURL = '../Model/avatar/texture/casual06_m_25.jpg';
+							}
+							if (i % 32 === 6) {
+								textureURL = '../Model/avatar/texture/casual07_m_25.jpg';
+							}
+							if (i % 32 === 7) {
+								textureURL = '../Model/avatar/texture/casual08_m_30.jpg';
+							}
+							if (i % 32 === 8) {
+								textureURL = '../Model/avatar/texture/casual09_m_30.jpg';
+							}
+							if (i % 32 === 9) {
+								textureURL = '../Model/avatar/texture/casual10_m_30.jpg';
+							}
+							if (i % 32 === 10) {
+								textureURL = '../Model/avatar/texture/casual11_m_30.jpg';
+							}
+							if (i % 32 === 11) {
+								textureURL = '../Model/avatar/texture/casual12_m_30.jpg';
+							}
+							if (i % 32 === 12) {
+								textureURL = '../Model/avatar/texture/casual13_m_30.jpg';
+							}
+							if (i % 32 === 13) {
+								textureURL = '../Model/avatar/texture/casual14_m_30.jpg';
+							}
+							if (i % 32 === 14) {
+								textureURL = '../Model/avatar/texture/casual15_m_30.jpg';
+							}
+							if (i % 32 === 15) {
+								textureURL = '../Model/avatar/texture/casual16_m_35.jpg';
+							}
+							if (i % 32 === 16) {
+								textureURL = '../Model/avatar/texture/casual17_m_35.jpg';
+							}
+							if (i % 32 === 17) {
+								textureURL = '../Model/avatar/texture/casual18_m_35.jpg';
+							}
+							if (i % 32 === 18) {
+								textureURL = '../Model/avatar/texture/casual19_m_35.jpg';
+							}
+							if (i % 32 === 19) {
+								textureURL = '../Model/avatar/texture/casual20_m_20.jpg';
+							}
+							if (i % 32 === 20) {
+								textureURL = '../Model/avatar/texture/casual21_m_35.jpg';
+							}
+							if (i % 32 === 21) {
+								textureURL = '../Model/avatar/texture/casual22_m_35.jpg';
+							}
+							if (i % 32 === 22) {
+								textureURL = '../Model/avatar/texture/casual23_m_40.jpg';
+							}
+							if (i % 32 === 23) {
+								textureURL = '../Model/avatar/texture/casual24_m_40.jpg';
+							}
+							if (i % 32 === 24) {
+								textureURL = '../Model/avatar/texture/casual25_m_40.jpg';
+							}
+							if (i % 32 === 25) {
+								textureURL = '../Model/avatar/texture/casual26_m_40.jpg';
+							}
+							if (i % 32 === 26) {
+								textureURL = '../Model/avatar/texture/casual27_m_70.jpg';
+							}
+							if (i % 32 === 27) {
+								textureURL = '../Model/avatar/texture/casual28_m_70.jpg';
+							}
+							if (i % 32 === 28) {
+								textureURL = '../Model/avatar/texture/casual29_m_70.jpg';
+							}
+							if (i % 32 === 29) {
+								textureURL = '../Model/avatar/texture/casual30_m_30.jpg';
+							}
+							if (i % 32 === 30) {
+								textureURL = '../Model/avatar/texture/casual31_m_30.jpg';
+							}
+							if (i % 32 === 31) {
+								textureURL = '../Model/avatar/texture/casual32_m_25.jpg';
+							}
+
+							isFinishLoad = true;
+							newMesh.scene.scale.set(150, 150, 150);
+
+							//人物骨骼参数化
+							var headRandom =1 +  Math.random()*3/multi;
+							var upperRandom1 = 1 + Math.random()*3/multi;
+							var upperRandom2 = 1 + Math.random()*4/multi;
+							var thighRandom = 1 + Math.random()*2/multi;
+
+							var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+							var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+							var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[1];
+							var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[22];
+							var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[23];
+							var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[27];
+							var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[28];
+
+							head0.scale(new THREE.Vector3(headRandom, 1 + (headRandom-1)/6, headRandom));
+							chest0.scale(new THREE.Vector3(upperRandom1, 1 + (upperRandom1-1)/10, upperRandom1));
+							wist0.scale(new THREE.Vector3(upperRandom2,  1 + (upperRandom2-1)/10, upperRandom2));
+							rThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+							rThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+							lThigh10.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+							lThigh20.scale(new THREE.Vector3(thighRandom, 1 + (thighRandom-1)/8, thighRandom));
+
+							//动态人群位置
+							var distance = Math.random() * 1500;
+							var distance1 = Math.random() * 1500;
+							newMesh.scene.position.set(distance-800, 0, distance1-4150);
+
+							// 将模型的材质附在newMesh上
+							var loader = new THREE.TextureLoader();
+							var texture = loader.load(textureURL, function () {
+							});
+							var material = new THREE.MeshStandardMaterial();
+							texture.anisotropy = renderer.getMaxAnisotropy();
+							//texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+							texture.flipY = false;
+							texture.repeat.set(1, 1);
+							material.skinning = true;
+							material.map = texture;
 							newMesh.scene.children[0].children[2].material = material;
 
 							// 调用动画
