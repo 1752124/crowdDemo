@@ -351,11 +351,20 @@
 				let skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
 				scene.add(skyBox);
 				let graph = [];
+
 				for(let i =0;i<gridTimes;i++)
 				{
 					let node = [];
 					for(let j =0;j<gridTimes;j++) {
-						node.push(1);
+						if(Math.random()>0.1)
+							node.push(1);
+						else
+						{
+							node.push(0);
+							let cube = new THREE.Mesh(new THREE.CubeGeometry(gridLength,gridLength,gridLength),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
+							cube.position.set(gridLength*j-lineLength/2+gridLength/2,gridLength/2,gridLength*i-lineLength/2+gridLength/2);
+							scene.add(cube);
+						}
 					}
 					graph.push(node);
 				}
