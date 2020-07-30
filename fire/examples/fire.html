@@ -342,6 +342,9 @@
 
 				}
 
+				//设置剔除
+				renderer.setFaceCulling(THREE.CullFaceBack,THREE.FrontFaceDirectionCW);
+
 				//设置背景
 				let skyBoxGeometry = new THREE.CubeGeometry( 1000000, 1000000, 1000000 );
 				let skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, side: THREE.BackSide } );
@@ -456,22 +459,14 @@
 					}
 
 					function caculatePath(resultArray){
-
-						//console.log(resultArray);
 						let maps = new Graph(graph);
-						let startX=(resultArray[0].position.z-gridLength/2+lineLength/2)/gridLength;
-						let startY=(resultArray[0].position.x-gridLength/2+lineLength/2)/gridLength;
-						let endX=(resultArray[1].position.z-gridLength/2+lineLength/2)/gridLength;
-						let endY=(resultArray[1].position.x-gridLength/2+lineLength/2)/gridLength;
-						let start = maps.grid[startX][startY];
-						let end = maps.grid[endX][endY];
-						let result = astar.search(maps, start, end);
+						let result = pathFind(maps,resultArray[0].position.x,resultArray[0].position.z,resultArray[1].position.x,resultArray[1].position.z);
 						if(result.length===0){
 							alert("无可到达路径");
 							cleanSphere();
 							return;
 						}
-						activeMesh(result);
+						activeMesh(result,resultArray[0].position.x,resultArray[0].position.z);
 						let timesRun = 0;
 						interval = setInterval(function(){
 							isRun = true;
@@ -492,13 +487,107 @@
 					}
 				}
 
-				function activeMesh(result)
+				function pathFind(maps,stX,stZ,enX,enZ) {
+
+					let startX=(stZ-gridLength/2+lineLength/2)/gridLength;
+					let startY=(stX-gridLength/2+lineLength/2)/gridLength;
+					let endX=(enZ-gridLength/2+lineLength/2)/gridLength;
+					let endY=(enX-gridLength/2+lineLength/2)/gridLength;
+					let start = maps.grid[startX][startY];
+					let end = maps.grid[endX][endY];
+					return astar.search(maps, start, end);
+				}
+
+				function activeMesh(result,resultX,resultZ)
 				{
 					let count =0;
-					let movePoint = [];
-					let moveStep = [];
-					let moveArr = [];
+					let movePoint = [];//通用的转身
+					let moveStep = [];//通用的路径
 					let mesh = [];
+					let meshAct = [];//分别的转身
+					let meshMovement = [];//分别的路径
+
+					for(let i =0;i<scene.children.length;i++)
+					{
+						if(scene.children[i].type === "Group")
+							mesh.push(scene.children[i]);
+					}
+
+					//分别的转身路径计算
+					for(let s = 0;s<mesh.length;s++)
+					{
+						let k,m;
+						for(let i=-lineLength/2;i<lineLength/2;i+=gridLength){
+							if(mesh[s].position.x>=i&&mesh[s].position.x<i+gridLength){
+								k=i+gridLength/2;
+								break;
+							}
+							if(mesh[s].position.x>=lineLength/2)
+							{
+								k = lineLength/2-gridLength/2;
+								break;
+							}
+							if(mesh[s].position.x<=-lineLength/2)
+							{
+								k = -lineLength/2+gridLength/2;
+								break;
+							}
+						}
+						for(let j=-lineLength/2;j<lineLength/2;j+=gridLength){
+							if(mesh[s].position.z>=j&&mesh[s].position.z<j+gridLength){
+								m=j+gridLength/2;
+								break;
+							}
+							if(mesh[s].position.z>=lineLength/2)
+							{
+								m = lineLength/2-gridLength/2;
+								break;
+							}
+							if(mesh[s].position.z<=-lineLength/2)
+							{
+								m = -lineLength/2+gridLength/2;
+								break;
+							}
+						}
+
+						let res;
+						if(k !== undefined && m !== undefined)
+							res = pathFind(new Graph(graph),k,m,resultX,resultZ);
+						else
+							continue;
+
+						let tempAct = [],tempMovement =[];
+						for(let i = 0;i<res.length-1;i++)
+						{
+							if(res[i].x !== res[i+1].x)
+							{
+								if(res[i+1].x>res[i].x) {
+									tempAct.push(0);
+									tempMovement.push(['+150','+0']);
+								}
+								else {
+									tempAct.push(1);
+									tempMovement.push(['-150','+0']);
+								}
+							}
+							else
+							{
+								if(res[i+1].y>res[i].y) {
+									tempAct.push(2);
+									tempMovement.push(['+0','+150']);
+								}
+								else {
+									tempAct.push(3);
+									tempMovement.push(['+0','-150']);
+								}
+							}
+
+						}
+						meshAct.push(tempAct);
+						meshMovement.push(tempMovement);
+					}
+
+					//通用的转身路径计算
 					for(let i = 0;i<result.length-1;i++)
 					{
 						if(result[i].x !== result[i+1].x)
@@ -525,44 +614,48 @@
 						}
 					}
 
-					for(let i = 0;i<result.length;i++)
+					//整合
+					for(let j = 0;j<mesh.length;j++)
 					{
-						let temp = [];
-						temp.push((result[i].x*gridLength-lineLength/2+gridLength/2));
-						temp.push((result[i].y*gridLength-lineLength/2+gridLength/2));
-						moveArr.push(temp);
+						for(let i =0;i<movePoint.length;i++) {
+							meshAct[j].push(movePoint[i]);
+							meshMovement[j].push(moveStep[i]);
+						}
 					}
 
-					for(let i =0;i<scene.children.length;i++)
-					{
-						if(scene.children[i].type === "Group")
-							mesh.push(scene.children[i]);
-					}
 
 					meshInterval = setInterval(function(){
 
-
+						let flag = false;
 						for (let i = 0; i < mesh.length; i++)
 						{
-							if(movePoint[count]===0)
+							if(count>=meshAct[i].length)
+								continue;
+							else
+								flag = true;
+							if(meshAct[i][count]===0)
 								mesh[i].rotation.y = 0;
-							else if(movePoint[count]===1)
+							else if(meshAct[i][count]===1)
 								mesh[i].rotation.y = -Math.PI;
-							else if(movePoint[count]===2)
+							else if(meshAct[i][count]===2)
 								mesh[i].rotation.y = Math.PI/2;
-							else if(movePoint[count]===3)
+							else if(meshAct[i][count]===3)
 								mesh[i].rotation.y = -Math.PI/2;
-
-							getTween(mesh[i]);
+							getTween(mesh[i],i);
 						}
 
 						count += 1;
-						if(count === movePoint.length){
+						if(!flag){
+							count = 0;
+							meshMovement= [];
+							meshAct = [];
+							movePoint = [];
+							moveStep = [];
 							clearInterval(meshInterval);
 						}
-						function getTween(obj)
+						function getTween(obj,i)
 						{
-								return new TWEEN.Tween(obj.position).to({x:moveStep[count][1],z:moveStep[count][0]}, 200)
+								return new TWEEN.Tween(obj.position).to({x:meshMovement[i][count][1],z:meshMovement[i][count][0]}, 200)
 										.start();
 						}
 					}, 200);
