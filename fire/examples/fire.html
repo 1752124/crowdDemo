@@ -47,7 +47,7 @@
 
 			var smokeArr = [];
 			var smokeTexture = new THREE.TextureLoader().load('textures/smoke/Smoke-Element.png');
-			var sv = 1/10,sv1=10,sv2=40;
+			var sv = 1/20,sv1=20,sv2=40;
 			var initI = 2,initJ = 0,initK = 1;
 			var smokeStep = 0;
 
@@ -530,7 +530,7 @@
 				this.roangle=0;
 			}
 			var newfire = new fireControl();
-			var firePosition = {x:0,y:0,z:0};
+			var firePosition = {x:0,y:0,z:-150};
 
 
 			window.load = load;
@@ -768,6 +768,7 @@
 						smokeArr[i+j*5+k*25].position.set( i*1500-3000,500+k*1000,j*1500-3000 );
 						smokeArr[i+j*5+k*25].visible = false;
 					}
+					smokeArr[initI+5*initJ+25*(initK-1)].visible = true;
 				};
 
 				smokeSceneType();
@@ -2613,6 +2614,7 @@
 									smokeArr[i + j * 5 + k * 25].material.opacity = Math.min(opacity,1);
 								}
 							}
+					smokeArr[initI+5*initJ+25*(initK-1)].material.opacity = 1;
 					smokeArr.forEach(function (child)
 					{
 						smokeStep += 0.0001;
