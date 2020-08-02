@@ -1015,7 +1015,7 @@
 
 					for(let i =0;i<scene.children.length;i++)
 					{
-						if(scene.children[i].type === "Group")
+						if(scene.children[i].type === "Group" && scene.children[i].name === "Scene")
 							mesh.push(scene.children[i]);
 					}
 
