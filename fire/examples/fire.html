@@ -836,6 +836,7 @@
 
 		}
 
+
 		//设置剔除
 		renderer.setFaceCulling(THREE.CullFaceBack,THREE.FrontFaceDirectionCW);
 
@@ -846,6 +847,46 @@
 		scene.add(skyBox);
 		let graph = [];
 
+		//设置箭头
+		let arrow = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0).normalize(), new THREE.Vector3(0,gridLength*5,lineLength/2), 250, 0xffff00,300,300);
+		scene.add(arrow);
+		let flag = 0;
+		let tween = new TWEEN.Tween(arrow.position).to({y:'+500'}, 200);
+		let tweenBack = new TWEEN.Tween(arrow.position).to({y:'-500'}, 200);
+		tween.chain(tweenBack);
+		tweenBack.chain(tween);
+		tween.start();
+		// let arrowInterval = setInterval(function(){
+		//
+		//
+		// 	flag++;
+		// 	if(flag > 1000)
+		// 		clearInterval(arrowInterval);
+		//
+		// }, 200)
+		//设置围墙
+		let wall1 = new THREE.Mesh(new THREE.CubeGeometry(gridLength/5,gridLength*2,lineLength),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
+		wall1.position.set(-lineLength/2,gridLength,0);
+		scene.add(wall1);
+		let wall2 = new THREE.Mesh(new THREE.CubeGeometry(gridLength/5,gridLength*2,lineLength),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
+		wall2.position.set(lineLength/2,gridLength,0);
+		scene.add(wall2);
+		let wall3 = new THREE.Mesh(new THREE.CubeGeometry(lineLength,gridLength*2,gridLength/5),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
+		wall3.position.set(0,gridLength,-lineLength/2);
+		scene.add(wall3);
+		let wall4 = new THREE.Mesh(new THREE.CubeGeometry(lineLength/2-gridLength,gridLength*2,gridLength/5),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
+		let wall5 = new THREE.Mesh(new THREE.CubeGeometry(lineLength/2-gridLength,gridLength*2,gridLength/5),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
+		wall4.position.set(lineLength*(1/4)+gridLength/2,gridLength,lineLength/2);
+		wall5.position.set(-lineLength*(1/4)-gridLength/2,gridLength,lineLength/2);
+		scene.add(wall4);
+		scene.add(wall5);
+
+		//设置逃生门
+		let door = new THREE.Mesh(new THREE.CubeGeometry(gridLength*2,gridLength*2,gridLength/4),new THREE.MeshBasicMaterial( {color:0xFF0000 } ));
+		door.position.set(0,gridLength,lineLength/2);
+		scene.add(door);
+
+		//设置障碍物
 		for(let i =0;i<gridTimes;i++)
 		{
 			let node = [];
@@ -1012,7 +1053,7 @@
 
 			for(let i =0;i<scene.children.length;i++)
 			{
-				if(scene.children[i].type === "Group" && scene.children[i].name === "Scene")
+				if(scene.children[i].name === "run" || scene.children[i].name === "walk"|| scene.children[i].name === "bend" || scene.children[i].name === "crawl")
 					mesh.push(scene.children[i]);
 			}
 
@@ -1126,24 +1167,39 @@
 				}
 			}
 
+			//0,1,2,3对应跑、走、弯腰、爬
+			let actArr = [];
+			actArr.push([0,-Math.PI,Math.PI/2,-Math.PI/2]);
+			actArr.push([Math.PI*13/48,-Math.PI+Math.PI*13/48,Math.PI/2+Math.PI*13/48,-Math.PI/2+Math.PI*13/48]);
+			actArr.push([Math.PI/4,-Math.PI+Math.PI/4,Math.PI/2+Math.PI/4,-Math.PI/2+Math.PI/4]);
+			actArr.push([Math.PI*4/5,-Math.PI+Math.PI*4/5,Math.PI/2+Math.PI*4/5,-Math.PI/2+Math.PI*4/5]);
 
 			meshInterval = setInterval(function(){
 
 				let flag = false;
 				for (let i = 0; i < mesh.length; i++)
 				{
+					let num = 0;
+					if(mesh[i].name === 'run')
+						num = 0;
+					else if(mesh[i].name === 'walk')
+						num = 1;
+					else if(mesh[i].name === 'bend')
+						num = 2;
+					else if(mesh[i].name === 'crawl')
+						num = 3;
 					if(count>=meshAct[i].length)
 						continue;
 					else
 						flag = true;
 					if(meshAct[i][count]===0)
-						mesh[i].rotation.y = 0;
+						mesh[i].rotation.y = actArr[num][0];
 					else if(meshAct[i][count]===1)
-						mesh[i].rotation.y = -Math.PI;
+						mesh[i].rotation.y = actArr[num][1];
 					else if(meshAct[i][count]===2)
-						mesh[i].rotation.y = Math.PI/2;
+						mesh[i].rotation.y = actArr[num][2];
 					else if(meshAct[i][count]===3)
-						mesh[i].rotation.y = -Math.PI/2;
+						mesh[i].rotation.y = actArr[num][3];
 					getTween(mesh[i],i);
 				}
 
