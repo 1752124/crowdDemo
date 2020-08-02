@@ -1773,7 +1773,7 @@
 				arr[num] = loadModelPromise(modelURL);
 
 			}
-			for (num = 0; num < 39; num++) {
+			for (num = 0; num <39; num++) {
 
 				arr1[num] = loadModelPromise(modelURL1);
 
@@ -1913,6 +1913,7 @@
 				else {
 					number = multi *10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 
 					temp = i % 31;
@@ -2050,6 +2051,28 @@
 					isFinishLoad = true;
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'run';
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*3/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[2];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[7];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[17];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[18];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 2400;
@@ -2101,6 +2124,7 @@
 				else {
 					number = multi *10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -2231,6 +2255,28 @@
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'run';
 
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()*4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*2/number;
+
+					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+
+					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist0.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					rThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+
 					//动态人群位置
 					var distance = Math.random() * 2400;
 					var distance1 = Math.random() * 2600;
@@ -2272,6 +2318,7 @@
 				else {
 					number = multi + 1;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL, textureURL1;
@@ -2292,6 +2339,28 @@
 					isFinishLoad = true;
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'run';
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 2/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()/number;
+					var thighRandom = 1 + Math.random()/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[1];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[9];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[11];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[10];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 2400;
@@ -2343,6 +2412,7 @@
 				else {
 					number = multi+ 1;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -2361,6 +2431,28 @@
 					isFinishLoad = true;
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'run';
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 1.5/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()*2/number;
+					var thighRandom = 1 + Math.random()/number;
+
+					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
+					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var lThigh1 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var lThigh2 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh1 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+					var rThigh2 = newMesh.scene.children[0].children[3].skeleton.boneInverses[13];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2, upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 2400;
@@ -2403,6 +2495,7 @@
 				else {
 					number = multi *10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 31;
 					var newMesh, textureURL, textureURL1;
@@ -2540,6 +2633,28 @@
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'walk';
 					newMesh.scene.rotation.set(0, Math.PI*13/48, 0);
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*3/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[2];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[7];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[17];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[18];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 1800;
@@ -2591,6 +2706,7 @@
 				else {
 					number = multi *10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -2722,6 +2838,28 @@
 					newMesh.scene.name = 'walk';
 					newMesh.scene.rotation.set(0, Math.PI*13/48, 0);
 
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()*4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*2/multi;
+
+					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+
+					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist0.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					rThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+
 					//动态人群位置
 					var distance = Math.random() * 1800;
 					var distance1 = Math.random() * 2000;
@@ -2763,6 +2901,7 @@
 				else {
 					number = multi + 1;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -2782,6 +2921,22 @@
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'walk';
 					newMesh.scene.rotation.set(0, Math.PI*13/48, 0);
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 2/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()/number;
+					var upperRandom3 = 1 + Math.random()*1.5/number;
+
+					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[9];
+					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var wist = newMesh.scene.children[0].children[3].skeleton.boneInverses[1];
+					var hip = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+
+					head.scale(new THREE.Vector3(headRandom, 1+(headRandom-1)/3, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2, upperRandom2, 1));
+					hip.scale(new THREE.Vector3(upperRandom3, upperRandom3, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 1800;
@@ -2824,6 +2979,7 @@
 				else {
 					number = multi * 10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 31;
 					var newMesh, textureURL, textureURL1;
@@ -2961,6 +3117,28 @@
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'bend';
 					newMesh.scene.rotation.set(0, Math.PI/4, 0);
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*3/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[2];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[7];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[17];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[18];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 1800;
@@ -3012,6 +3190,7 @@
 				else {
 					number = multi * 10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -3143,6 +3322,28 @@
 					newMesh.scene.name = 'bend';
 					newMesh.scene.rotation.set(0, Math.PI/4, 0);
 
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()*4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*2/number;
+
+					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+
+					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist0.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					rThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+
 					//动态人群位置
 					var distance = Math.random() * 1800;
 					var distance1 = Math.random() * 2000;
@@ -3184,6 +3385,7 @@
 				else {
 					number = multi + 1;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -3203,6 +3405,44 @@
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'bend';
 					newMesh.scene.rotation.set(0, Math.PI/4, 0);
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 2/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()/number;
+					var upperRandom3 = 1 + Math.random()*1.5/number;
+
+					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[9];
+					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var wist = newMesh.scene.children[0].children[3].skeleton.boneInverses[1];
+					var hip = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+
+					head.scale(new THREE.Vector3(headRandom, 1+(headRandom-1)/3, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2, upperRandom2, 1));
+					hip.scale(new THREE.Vector3(upperRandom3, upperRandom3, 1));
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 2/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()/number;
+					var thighRandom = 1 + Math.random()/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[1];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[9];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[11];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[10];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 1800;
@@ -3245,6 +3485,7 @@
 				else {
 					number = multi * 10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 
 					temp = i % 31;
@@ -3411,6 +3652,28 @@
 					newMesh.scene.children[0].children[3].children[0].material = material;
 					newMesh.scene.children[0].children[3].children[1].material = material1;
 
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*3/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[2];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[7];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[17];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[18];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+
 					// 调用动画
 					meshMixer = new THREE.AnimationMixer(newMesh.scene);
 					action = meshMixer.clipAction(newMesh.animations[0]);
@@ -3434,6 +3697,7 @@
 				else {
 					number = multi * 10 + 10;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -3565,6 +3829,28 @@
 					newMesh.scene.name = 'crawl';
 					newMesh.scene.rotation.set(0, Math.PI*4/5, 0);
 
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()*4/number;
+					var upperRandom1 = 1 + Math.random()*2/number;
+					var upperRandom2 = 1 + Math.random()*3/number;
+					var thighRandom = 1 + Math.random()*2/number;
+
+					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+
+					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
+					wist0.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					rThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh10.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh20.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+
 					//动态人群位置
 					var distance = Math.random() * 2400;
 					var distance1 = Math.random() * 2600;
@@ -3606,6 +3892,7 @@
 				else {
 					number = multi + 1;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL, textureURL1;
@@ -3627,6 +3914,28 @@
 					newMesh.scene.scale.set(150, 150, 150);
 					newMesh.scene.name = 'crawl';
 					newMesh.scene.rotation.set(0, Math.PI*4/5, 0);
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 2/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()/number;
+					var thighRandom = 1 + Math.random()/number;
+
+					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
+					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[1];
+					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[9];
+					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[11];
+					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
+					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[10];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2,  upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					//动态人群位置
 					var distance = Math.random() * 2400;
@@ -3679,6 +3988,7 @@
 				else {
 					number = multi + 1;
 				}
+				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -3703,6 +4013,28 @@
 					var distance = Math.random() * 2400;
 					var distance1 = Math.random() * 2600;
 					newMesh.scene.position.set(distance-1100, 0, distance1-5300);
+
+					//人物骨骼参数化
+					var headRandom =1 +  Math.random()* 1.5/number;
+					var upperRandom1 = 1 + Math.random()/number;
+					var upperRandom2 = 1 + Math.random()*2/number;
+					var thighRandom = 1 + Math.random()/number;
+
+					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
+					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var lThigh1 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
+					var lThigh2 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh1 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+					var rThigh2 = newMesh.scene.children[0].children[3].skeleton.boneInverses[13];
+
+					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
+					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
+					wist.scale(new THREE.Vector3(upperRandom2, upperRandom2, 1));
+					lThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					lThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh1.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
+					rThigh2.scale(new THREE.Vector3(thighRandom, thighRandom, 1));
 
 					// 将模型的材质附在newMesh上
 					var loader = new THREE.TextureLoader();
