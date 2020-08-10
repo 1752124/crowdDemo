@@ -818,8 +818,11 @@
 
 		//设置地板
 		let geometry = new THREE.Geometry();
+		//这是棋盘格大正方形的边长
 		let lineLength = 7500;
+		//这是每个小格子的宽度
 		let gridLength =150;
+		//这是每条边上的小格子的数量
 		let gridTimes = lineLength/gridLength;
 		geometry.vertices.push( new THREE.Vector3( - lineLength/2, 0, 0 ) );
 		geometry.vertices.push( new THREE.Vector3( lineLength/2, 0, 0 ) );
@@ -838,6 +841,7 @@
 
 
 		//设置剔除
+		//这是实际上是剔除了模型看不到的一面
 		renderer.setFaceCulling(THREE.CullFaceBack,THREE.FrontFaceDirectionCW);
 
 		//设置背景
@@ -850,21 +854,14 @@
 		//设置箭头
 		let arrow = new THREE.ArrowHelper(new THREE.Vector3(0,-1,0).normalize(), new THREE.Vector3(0,gridLength*5,lineLength/2), 250, 0xffff00,300,300);
 		scene.add(arrow);
-		let flag = 0;
+		//这里用到了tween线性动画，可以去tween.js官网了解学习
 		let tween = new TWEEN.Tween(arrow.position).to({y:'+500'}, 200);
 		let tweenBack = new TWEEN.Tween(arrow.position).to({y:'-500'}, 200);
 		tween.chain(tweenBack);
 		tweenBack.chain(tween);
 		tween.start();
-		// let arrowInterval = setInterval(function(){
-		//
-		//
-		// 	flag++;
-		// 	if(flag > 1000)
-		// 		clearInterval(arrowInterval);
-		//
-		// }, 200)
-		//设置围墙
+
+		//墙壁
 		let wall1 = new THREE.Mesh(new THREE.CubeGeometry(gridLength/5,gridLength*2,lineLength),new THREE.MeshBasicMaterial( {color: 0xC0C0C0} ));
 		wall1.position.set(-lineLength/2,gridLength,0);
 		scene.add(wall1);
@@ -887,10 +884,12 @@
 		scene.add(door);
 
 		//设置障碍物
+		//这里的graph是一个寻路中用到的hash表，其中0代表障碍物，1代表通路
 		for(let i =0;i<gridTimes;i++)
 		{
 			let node = [];
 			for(let j =0;j<gridTimes;j++) {
+				//障碍物的产生是根据随机数确定的，更改这里就更改了障碍物的出现概率
 				if(Math.random()>0.1)
 					node.push(1);
 				else
@@ -908,22 +907,24 @@
 		let resultArray = [];
 		let isRun = false;
 		let interval,meshInterval;
-		let raycaster = new THREE.Raycaster();
+		let rayCaster = new THREE.Raycaster();
 		let mouse = new THREE.Vector2();
 		let groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+		//这里是获取鼠标点击位置与方格地面的交点，用于计算出点击到了哪个网格
 		function pickupObjects(e){
 			if(isRun)
 				return;
-			//将鼠标点击位置的屏幕坐标转成threejs中的标准坐标
+			//将鼠标点击位置的屏幕坐标转成three.js中的标准坐标
 			mouse.x = (e.clientX/window.innerWidth)*2 -1;
 			mouse.y = -(e.clientY/window.innerHeight)*2 + 1;
 			//从相机发射一条射线，经过鼠标点击位置
-			raycaster.setFromCamera(mouse,camera);
+			rayCaster.setFromCamera(mouse,camera);
 			//计算射线相机到的对象，可能有多个对象，因此返回的是一个数组，按离相机远近排列
-			let ray=raycaster.ray;
+			let ray=rayCaster.ray;
 			let intersects = ray.intersectPlane(groundPlane);
 			let x=intersects.x;
 			let z=intersects.z;
+			//下面是坐标转换，从点击到的坐标转换到点击到的方格的坐标（是graph的坐标轴下的，并非three.js默认下的）
 			let k,m;
 			for(let i=-lineLength/2;i<lineLength/2;i+=gridLength){
 				if(x>=i&&x<i+gridLength){
@@ -937,32 +938,38 @@
 					break;
 				}
 			}
+			//这里判断点击位置是否在网格内，是就开始计算寻路
 			if(k !== undefined && m !== undefined)
 				initSphere(k,m);
 		}
 
 		document.addEventListener('click',pickupObjects,false);
-		let isCaculate=false;
+		let isCalculated=false;
 
+		//这里是寻路完成后清除上次寻路的痕迹
 		function cleanSphere(){
 			if(interval!==undefined)
 				clearInterval(interval);
 			let child=scene.children;
 			for(let i=0;i<child.length;i++){
 				//if(child[i].geometry instanceof THREE.CubeGeometry)
+				//这里是判断要清除的东西，判断依据是scene的children的mesh的name
 				if(child[i].name === "cube"||child[i].name === "cube1")
 				{
 					scene.remove(child[i]);
 					i--;
 				}
 			}
-			isCaculate=false;
+			isCalculated=false;
 		}
 
 		//设定起点终点
+		//resultArray中，resultArray[0]存放的是寻路的起点，resultArray[1]存放的是寻路的终点
 		function initSphere(x,z){
+			//清除resultArray
 			if(resultArray.length>1)
 				resultArray = [];
+			//第一次点击的情况，没有上一次的点击位置，手动设置了一个（75，5，75）
 			if(resultArray.length === 0){
 				cleanSphere();
 				let geometry = new THREE.CubeGeometry( 145, 1, 145 );
@@ -981,10 +988,11 @@
 				scene.add( sphere2 );
 				resultArray.push(sphere2);
 				caculatePath(resultArray);
-				isCaculate=true;
+				isCalculated=true;
 				resultArray=[];
 				resultArray.push(sphere2);
 			}
+			//非第一次点击的情况，把上一次点击的位置作为初始点，这一次点击的位置作为终点
 			if(resultArray[0].position.x !== x && resultArray[0].position.z !== z){
 				cleanSphere();
 				let geometry = new THREE.CubeGeometry( 145, 1, 145 );
@@ -997,21 +1005,25 @@
 				resultArray.push(sphere);
 				scene.add( sphere );
 				caculatePath(resultArray);
-				isCaculate=true;
+				isCalculated=true;
 				resultArray=[];
 				resultArray.push(sphere);
 			}
 
+			//这是寻路的计算实现
 			function caculatePath(resultArray){
 				let maps = new Graph(graph);
+				//astar寻路的具体方法请前往源文件查看，result是寻路结果
 				let result = pathFind(maps,resultArray[0].position.x,resultArray[0].position.z,resultArray[1].position.x,resultArray[1].position.z);
 				if(result.length===0){
 					alert("无可到达路径");
 					cleanSphere();
 					return;
 				}
+				//根据寻路结果和初始位置让模型动起来
 				activeMesh(result,resultArray[0].position.x,resultArray[0].position.z);
 				let timesRun = 0;
+				//这个setInterval是让寻路的黄色方格逐渐显示，方格名为cube
 				interval = setInterval(function(){
 					isRun = true;
 					let geometry = new THREE.CubeGeometry( 145, 1, 145 );
@@ -1042,6 +1054,7 @@
 			return astar.search(maps, start, end);
 		}
 
+		//每一个人物的运动轨迹分为两部分，第一部分是从人物的当前位置到总体寻路的初始位置（这个每个人物都不同），再从总体寻路的初始位置到总体寻路的终点（这个每个人物都相同）
 		function activeMesh(result,resultX,resultZ)
 		{
 			let count =0;
@@ -1051,13 +1064,14 @@
 			let meshAct = [];//分别的转身
 			let meshMovement = [];//分别的路径
 
+			//这里根据name找出要动的模型
 			for(let i =0;i<scene.children.length;i++)
 			{
 				if(scene.children[i].name === "run" || scene.children[i].name === "walk"|| scene.children[i].name === "bend" || scene.children[i].name === "crawl")
 					mesh.push(scene.children[i]);
 			}
 
-			//分别的转身路径计算
+			//这里是分别的转身路径计算，也就是每个模型到总体寻路的初始位置的路径和转身动作计算
 			for(let s = 0;s<mesh.length;s++)
 			{
 				let k,m;
@@ -1100,6 +1114,7 @@
 				else
 					continue;
 
+				//tempAct是转身动作，0，1，2，3代表四个方向的转身；tempMovement里面是字符串，是使用的tween的相对运动的方法，具体请前往tween.js查看
 				let tempAct = [],tempMovement =[];
 				for(let i = 0;i<res.length-1;i++)
 				{
@@ -1131,7 +1146,7 @@
 				meshMovement.push(tempMovement);
 			}
 
-			//通用的转身路径计算
+			//这里是通用的转身路径计算，也就是总体寻路的初始位置到总体寻路的终点的路径和转身动作计算
 			for(let i = 0;i<result.length-1;i++)
 			{
 				if(result[i].x !== result[i+1].x)
@@ -1167,13 +1182,14 @@
 				}
 			}
 
-			//0,1,2,3对应跑、走、弯腰、爬
+			//0,1,2,3对应跑、走、弯腰、爬，这里由于模型带有先天缺陷导致默认朝向有问题，因此进行了初始值的设定
 			let actArr = [];
 			actArr.push([0,-Math.PI,Math.PI/2,-Math.PI/2]);
 			actArr.push([Math.PI*13/48,-Math.PI+Math.PI*13/48,Math.PI/2+Math.PI*13/48,-Math.PI/2+Math.PI*13/48]);
 			actArr.push([Math.PI/4,-Math.PI+Math.PI/4,Math.PI/2+Math.PI/4,-Math.PI/2+Math.PI/4]);
 			actArr.push([Math.PI*4/5,-Math.PI+Math.PI*4/5,Math.PI/2+Math.PI*4/5,-Math.PI/2+Math.PI*4/5]);
 
+			//这个setInterval进行人物的运动，终止判断条件为flag
 			meshInterval = setInterval(function(){
 
 				let flag = false;
@@ -1212,6 +1228,7 @@
 					moveStep = [];
 					clearInterval(meshInterval);
 				}
+				//人物的tween动画
 				function getTween(obj,i)
 				{
 					return new TWEEN.Tween(obj.position).to({x:meshMovement[i][count][1],z:meshMovement[i][count][0]}, 200)
