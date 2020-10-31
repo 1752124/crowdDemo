@@ -22,12 +22,19 @@
 <body>
 <div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> fire and smoke</div>
 <br><br><br>
-<a class="input-title">Number of People: </a> <input type="text" id="number" placeholder="Enter the number"><br>
-<button  type="button" onclick="window.load()">Load</button>
+<!--<a class="input-title">Number of People: </a> <input type="text" id="number" placeholder="Enter the number"><br>-->
+<button  type="button" onclick="handleClick(50)" >50 People</button>
+<button  type="button" onclick="handleClick(100)" >100 People</button>
+<button  type="button" onclick="handleClick(500)" >500 People</button>
+<button  type="button" onclick="handleClick(1000)" >1000 People</button>
+<button  type="button" onclick="handleClick(1500)" >1500 People</button>
+<button  type="button" onclick="handleClick(2000)" >2000 People</button>
+
 <!-- 用于显示统计图形 -->
 <div id="container"></div>
 <div id="Stats-output"></div>
 <div id="WebGL-output" style="overflow: hidden;"></div>
+var multi;
 <script type="module">
 
 	import * as THREE from '../build/three.module.js';
@@ -42,9 +49,10 @@
 	import { DRACOLoader } from './jsm/loaders/DRACOLoader.js';
 
 	var camera, scene, renderer,
-		bulbLight, bulbMat, hemiLight, stats;
+			bulbLight, bulbMat, hemiLight, stats;
 	var ballMat, cubeMat, floorMat;
 	var fire;
+
 
 	var smokeArr = [];
 	var smokeTexture = new THREE.TextureLoader().load('textures/smoke/Smoke-Element.png');
@@ -105,10 +113,10 @@
 		this.SYNC_TIME = 2000;
 		// 纹理
 		this.texture = (option && option.texture && option.texture instanceof THREE.Texture) ? option.texture
-			: null;
+				: null;
 		// 位置
 		this.position = (option && option.position && option.position instanceof THREE.Vector3) ? option.position
-			: new THREE.Vector3(0, 0, 0);
+				: new THREE.Vector3(0, 0, 0);
 		// 存活时间
 		this.lifetime = (option && option.lifetime && option.lifetime instanceof Number) ? option.lifetime : 5;
 		// 颜色
@@ -117,13 +125,13 @@
 		this.opacity = (option && option.opacity && option.opacity instanceof Number) ? option.opacity : 1;
 		// 速度
 		this.velocity = (option && option.velocity && option.velocity instanceof THREE.Vector3) ? option.velocity
-			: new THREE.Vector3(0, 0, 0);
+				: new THREE.Vector3(0, 0, 0);
 		// 加速度
 		this.acceleration = (option && option.acceleration && option.acceleration instanceof THREE.Vector3) ? option.acceleration
-			: new THREE.Vector3(0, 0, 0);
+				: new THREE.Vector3(0, 0, 0);
 		// 粒子放大倍数
 		this.scale = (option && option.scale && option.scale instanceof THREE.Vector3) ? option.scale
-			: new THREE.Vector3(1000, 1000, 0);
+				: new THREE.Vector3(1000, 1000, 0);
 		// THREE.Sprite 实例
 		this.target = null;
 		// 动画
@@ -240,13 +248,13 @@
 	ParticleSystem.ParticleManager = function (option) {
 		// 最大粒子数
 		this.maxParticlesNum = (option && option.maxParticlesNum && option.maxParticlesNum instanceof Number)
-			? option.maxParticlesNum : 500;
+				? option.maxParticlesNum : 500;
 		this.onceEjectNum = (option && option.onceEjectNum && option.onceEjectNum instanceof Number)
-			? option.onceEjectNum : 1;
+				? option.onceEjectNum : 1;
 		this.livingParticles = [];
 		this.diedParticles = [];
 		this.position = (option && option.position && option.position instanceof THREE.Vector3) ? option.position
-			: new THREE.Vector3(0, 0, 0);
+				: new THREE.Vector3(0, 0, 0);
 		this.target = new THREE.Group();
 	};
 
@@ -323,60 +331,60 @@
 		var self = this;
 
 		particle.animation.movingX = (particle.animation.movingX) ? particle.animation.movingX
-			: new TWEEN.Tween(particle.position);
+				: new TWEEN.Tween(particle.position);
 		particle.animation.movingY = (particle.animation.movingY) ? particle.animation.movingY
-			: new TWEEN.Tween(particle.position);
+				: new TWEEN.Tween(particle.position);
 		particle.animation.movingZ = (particle.animation.movingZ) ? particle.animation.movingZ
-			: new TWEEN.Tween(particle.position);
+				: new TWEEN.Tween(particle.position);
 
 		particle.animation.movingX
-			.to({
-				x: ParticleSystem.utils.getNextPosition(particle.position.x, particle.velocity.x, particle.acceleration.x, particle.curLifetime)
-			}, particle.curLifetime * 1000)
-			.onUpdate(function () {
-				if (self.onMovingAnimationUpdate && self.onMovingAnimationUpdate instanceof Function) {
-					self.onMovingAnimationUpdate(particle);
-				}
-				particle.redraw();
-			})
-			.easing(ParticleSystem.utils.accelerationEasing(particle.velocity.x, particle.acceleration.x, particle.curLifetime));
+				.to({
+					x: ParticleSystem.utils.getNextPosition(particle.position.x, particle.velocity.x, particle.acceleration.x, particle.curLifetime)
+				}, particle.curLifetime * 1000)
+				.onUpdate(function () {
+					if (self.onMovingAnimationUpdate && self.onMovingAnimationUpdate instanceof Function) {
+						self.onMovingAnimationUpdate(particle);
+					}
+					particle.redraw();
+				})
+				.easing(ParticleSystem.utils.accelerationEasing(particle.velocity.x, particle.acceleration.x, particle.curLifetime));
 
 
 		particle.animation.movingY
-			.to({
-				y: ParticleSystem.utils.getNextPosition(particle.position.y, particle.velocity.y, particle.acceleration.y, particle.curLifetime)
-			}, particle.curLifetime * 1000)
-			.onUpdate(function () {
-				if (self.onMovingAnimationUpdate && self.onMovingAnimationUpdate instanceof Function) {
-					self.onMovingAnimationUpdate(particle);
-				}
-				particle.redraw();
-			})
-			.easing(ParticleSystem.utils.accelerationEasing(particle.velocity.y, particle.acceleration.y, particle.curLifetime));
+				.to({
+					y: ParticleSystem.utils.getNextPosition(particle.position.y, particle.velocity.y, particle.acceleration.y, particle.curLifetime)
+				}, particle.curLifetime * 1000)
+				.onUpdate(function () {
+					if (self.onMovingAnimationUpdate && self.onMovingAnimationUpdate instanceof Function) {
+						self.onMovingAnimationUpdate(particle);
+					}
+					particle.redraw();
+				})
+				.easing(ParticleSystem.utils.accelerationEasing(particle.velocity.y, particle.acceleration.y, particle.curLifetime));
 
 
 		particle.animation.movingZ
-			.to({
-				z: ParticleSystem.utils.getNextPosition(particle.position.z, particle.velocity.z, particle.acceleration.z, particle.curLifetime)
-			}, particle.curLifetime * 1000)
-			.onUpdate(function () {
-				if (self.onMovingAnimationUpdate && self.onMovingAnimationUpdate instanceof Function) {
-					self.onMovingAnimationUpdate(particle);
-				}
-				particle.redraw();
-			})
-			.easing(ParticleSystem.utils.accelerationEasing(particle.velocity.z, particle.acceleration.z, particle.curLifetime));
+				.to({
+					z: ParticleSystem.utils.getNextPosition(particle.position.z, particle.velocity.z, particle.acceleration.z, particle.curLifetime)
+				}, particle.curLifetime * 1000)
+				.onUpdate(function () {
+					if (self.onMovingAnimationUpdate && self.onMovingAnimationUpdate instanceof Function) {
+						self.onMovingAnimationUpdate(particle);
+					}
+					particle.redraw();
+				})
+				.easing(ParticleSystem.utils.accelerationEasing(particle.velocity.z, particle.acceleration.z, particle.curLifetime));
 	};
 
 	// 同步粒子状态
 	ParticleSystem.ParticleManager.prototype.syncParticle = function (particle, doBeforeSync, doAfterSync) {
 		var self = this;
 		particle.doBeforeSyncStatus(doBeforeSync)
-			.doAfterSyncStatus(function () {
-				if (doAfterSync && doAfterSync instanceof Function) doAfterSync(particle);
-				self.reloadAnimationsAfterSync(particle);
-			})
-			.syncStatus();
+				.doAfterSyncStatus(function () {
+					if (doAfterSync && doAfterSync instanceof Function) doAfterSync(particle);
+					self.reloadAnimationsAfterSync(particle);
+				})
+				.syncStatus();
 	}
 
 	// 粒子更新回调函数
@@ -460,7 +468,7 @@
 		var length = self.controlSheet.length,  width = self.controlSheet.width, high = self.controlSheet.high;
 		var r = ParticleSystem.utils.randomFrom;
 		particle.position.set(
-			r(x - length / 2, x + length / 2), y, r(z - width / 2, z + width/2)
+				r(x - length / 2, x + length / 2), y, r(z - width / 2, z + width/2)
 		);
 
 		self.onceEjectNum = Math.sqrt(width * length) * 5;
@@ -496,22 +504,22 @@
 		var self = this;
 		particle.animation.reSizing = (particle.animation.reSizing) ? particle.animation.reSizing : new TWEEN.Tween(particle.scale);
 		particle.animation.reSizing
-			.to({ x: 4, y: 4, z: 0 }, particle.curLifetime / 5 * 500)
-			.onUpdate(function () {
-				particle.redraw();
-			})
-			.easing(TWEEN.Easing.Cubic.Out)
-			.chain(new TWEEN.Tween(particle.scale)
-				.to({
-					x: 0.0, y: 0.0, z: 0
-				}, particle.curLifetime / 5 * 1000)
+				.to({ x: 4, y: 4, z: 0 }, particle.curLifetime / 5 * 500)
 				.onUpdate(function () {
 					particle.redraw();
 				})
-				.onComplete(function () {
-					particle.curLifetime = 0;
-				})
-				.easing(TWEEN.Easing.Cubic.Out));
+				.easing(TWEEN.Easing.Cubic.Out)
+				.chain(new TWEEN.Tween(particle.scale)
+						.to({
+							x: 0.0, y: 0.0, z: 0
+						}, particle.curLifetime / 5 * 1000)
+						.onUpdate(function () {
+							particle.redraw();
+						})
+						.onComplete(function () {
+							particle.curLifetime = 0;
+						})
+						.easing(TWEEN.Easing.Cubic.Out));
 
 	}
 
@@ -540,6 +548,7 @@
 
 	window.load = load;
 
+
 	// ref for lumens: http://www.power-sure.com/lumens.htm
 	/*
 	var bulbLuminousPowers = {
@@ -552,7 +561,6 @@
 		"20 lm (4W)": 20,
 		"Off": 0
 	};
-
 	// ref for solar irradiances: https://en.wikipedia.org/wiki/Lux
 	var hemiLuminousIrradiances = {
 		"0.0001 lx (Moonless Night)": 0.0001,
@@ -567,7 +575,6 @@
 		"18000 lx (Daylight)": 18000,
 		"50000 lx (Direct Sun)": 50000
 	};
-
 	// var params = {
 	// 	shadows: true,
 	// 	exposure: 0.68,
@@ -700,15 +707,17 @@
 	function pickupObjects(e){
 		if(isRun)
 			return;
-	// // 将鼠标点击位置的屏幕坐标转成threejs中的标准坐标
-	// mouse.x = (e.clientX/window.innerWidth)*2 -1;
-	// mouse.y = -(e.clientY/window.innerHeight)*2 + 1;
-	// // 从相机发射一条射线，经过鼠标点击位置
-	// raycaster.setFromCamera(mouse,camera);
-	// // 计算射线相机到的对象，可能有多个对象，因此返回的是一个数组，按离相机远近排列
-	// let ray=raycaster.ray;
-	// let intersects = ray.intersectPlane(groundPlane);
-		var inputNum = parseInt(document.getElementById("number").value);
+		// // 将鼠标点击位置的屏幕坐标转成threejs中的标准坐标
+		// mouse.x = (e.clientX/window.innerWidth)*2 -1;
+		// mouse.y = -(e.clientY/window.innerHeight)*2 + 1;
+		// // 从相机发射一条射线，经过鼠标点击位置
+		// raycaster.setFromCamera(mouse,camera);
+		// // 计算射线相机到的对象，可能有多个对象，因此返回的是一个数组，按离相机远近排列
+		// let ray=raycaster.ray;
+		// let intersects = ray.intersectPlane(groundPlane);
+		// var inputNum = parseInt(document.getElementById("number").value);
+		var inputNum = multi;
+		console.log("inputNum",inputNum);
 		if(manNum > 0.7*inputNum && !startrun)
 		{
 			let x=0;
@@ -727,7 +736,7 @@
 				}
 			}
 			if(k !== undefined && m !== undefined)
-			initSphere(k,m);
+				initSphere(k,m);
 			startrun = true;
 		}
 	}
@@ -1905,20 +1914,14 @@
 		}
 
 		/*params.Single = function () {
-
 			fire.clearSources();
 			fire.addSource( 0.5, 0.1, 0.1, 1.0, 0.0, 1.0 );
-
 		};
-
 		params.Multiple = function () {
-
 			fire.clearSources();
 			fire.addSource( 0.45, 0.1, 0.1, 0.5, 0.0, 1.0 );
 			fire.addSource( 0.55, 0.1, 0.1, 0.5, 0.0, 1.0 );
-
 		};
-
 		params.Text = function () {
 			var text = "Three JS";
 			var size = 180;
@@ -1928,7 +1931,6 @@
 			canvas.height = 1024;
 			var context = canvas.getContext( "2d" );
 			context.font = size + "pt Arial";
-
 			context.strokeStyle = "black";
 			context.strokeRect( 0, 0, canvas.width, canvas.height );
 			context.textAlign = "center";
@@ -1936,24 +1938,19 @@
 			context.lineWidth = 5;
 			context.strokeStyle = color;
 			context.fillStyle = "black";
-
 			context.strokeText( text, canvas.width / 2, canvas.height * 0.75 );
 			var texture = new THREE.Texture( canvas );
 			texture.needsUpdate = true;
-
 			fire.setSourceMap( texture );
 		};
-
 		var gui = new GUI();
 		gui.add( params, 'hemiIrradiance', Object.keys( hemiLuminousIrradiances ) );
 		gui.add( params, 'bulbPower', Object.keys( bulbLuminousPowers ) );
 		gui.add( params, 'exposure', 0, 1 );
 		gui.add( params, 'shadows' );
-
 		gui.add( params, "Single" );
 		gui.add( params, "Multiple" );
 		gui.add( params, "Text" );
-
 		gui.addColor( params, 'color1' ).onChange( updateColor1 );
 		gui.addColor( params, 'color2' ).onChange( updateColor2 );
 		gui.addColor( params, 'color3' ).onChange( updateColor3 );
@@ -1969,9 +1966,7 @@
 		gui.add( params, 'windY', - 5, 5 ).step( 0.01 ).onChange( updateWindY );
 		gui.add( params, 'speed', 0, 1000 ).onChange( updateSpeed );
 		gui.add( params, 'massConservation' ).onChange( updateMassConservation );
-
 		function updateAll() {
-
 			updateColor1( params.color1 );
 			updateColor2( params.color2 );
 			updateColor3( params.color3 );
@@ -1987,17 +1982,11 @@
 			updateWindY( params.windY );
 			updateSpeed( params.speed );
 			updateMassConservation( params.massConservation );
-
 			for ( var i in gui.__controllers ) {
-
 				gui.__controllers[ i ].updateDisplay();
-
 			}
-
 		}
-
 		params.Candle = function () {
-
 			params.color1 = 0xffffff;
 			params.color2 = 0xffa000;
 			params.color3 = 0x000000;
@@ -2013,14 +2002,10 @@
 			params.airSpeed = 8.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Candle' );
-
 		params.Torch = function () {
-
 			params.color1 = 0xffdcaa;
 			params.color2 = 0xffa000;
 			params.color3 = 0x000000;
@@ -2036,14 +2021,10 @@
 			params.airSpeed = 10.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Torch' );
-
 		params.Campfire = function () {
-
 			params.color1 = 0xffffff;
 			params.color2 = 0xffa000;
 			params.color3 = 0x000000;
@@ -2059,14 +2040,10 @@
 			params.airSpeed = 12.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Campfire' );
-
 		params.Fireball = function () {
-
 			params.color1 = 0xffffff;
 			params.color2 = 0xffa000;
 			params.color3 = 0x000000;
@@ -2082,14 +2059,10 @@
 			params.airSpeed = 20.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Fireball' );
-
 		params.Iceball = function () {
-
 			params.color1 = 0x00bdf7;
 			params.color2 = 0x1b3fb6;
 			params.color3 = 0x001869;
@@ -2105,14 +2078,10 @@
 			params.airSpeed = 40.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Iceball' );
-
 		params.Smoke = function () {
-
 			params.color1 = 0xd2d2d2;
 			params.color2 = 0xd7d7d7;
 			params.color3 = 0x000000;
@@ -2128,14 +2097,10 @@
 			params.airSpeed = 18.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Smoke' );
-
 		params.Cigar = function () {
-
 			params.color1 = 0xc5c5c5;
 			params.color2 = 0x787878;
 			params.color3 = 0x000000;
@@ -2151,14 +2116,10 @@
 			params.airSpeed = 6.0;
 			params.speed = 500.0;
 			params.massConservation = false;
-
 			updateAll();
-
 		};
 		gui.add( params, 'Cigar' );
-
 		gui.open();
-
 		params.Campfire();
 		params.Single();*/
 
@@ -2197,19 +2158,15 @@
 		renderer.shadowMap.enabled = params.shadows;
 		bulbLight.castShadow = params.shadows;
 		if ( params.shadows !== previousShadowMap ) {
-
 			ballMat.needsUpdate = true;
 			cubeMat.needsUpdate = true;
 			floorMat.needsUpdate = true;
 			previousShadowMap = params.shadows;
-
 		}
 		bulbLight.power = bulbLuminousPowers[ params.bulbPower ];
 		bulbMat.emissiveIntensity = bulbLight.intensity / Math.pow( 0.02, 2.0 ); // convert from intensity to irradiance at bulb surface
-
 		hemiLight.intensity = hemiLuminousIrradiances[ params.hemiIrradiance ];
 		var time = Date.now() * 0.0005;
-
 		// bulbLight.position.y = Math.cos( time ) * 0.75 + 1.25;
 		bulbLight.position.y = 2*0.75 + 1.25;*/
 
@@ -2256,7 +2213,7 @@
 
 	var startTime = performance.now() / 1000;
 
-	let multi, meshMixer, meshMixerArr, action, modelURL, modelURL1, modelURL2, modelURL3, modelURL4, modelURL5, modelURL6, modelURL7, modelURL8, modelURL9, modelURL10, modelURL11, modelURL12, modelURL13, clip;
+	let meshMixer, meshMixerArr, action, modelURL, modelURL1, modelURL2, modelURL3, modelURL4, modelURL5, modelURL6, modelURL7, modelURL8, modelURL9, modelURL10, modelURL11, modelURL12, modelURL13, clip;
 	var statsFPS, statsMem, statsTime;
 	var endTime, xTimePanel;
 	//初始化统计对象
@@ -2292,10 +2249,10 @@
 	}
 
 	function load() {
-		var multi = parseInt(document.getElementById("number").value);
-		var surplus = multi % 86;
-		multi = Math.floor(multi / 86);
-		//console.log(multi);
+		var sum = multi;
+		var surplus = sum % 86;
+		sum = Math.floor(sum / 86);
+		console.log("Math.floor",sum);
 		var v0 = 0.8;//Agent初始速度
 		var vmax = 1.6;//Agent最大速度
 		var fear = 0;//Agent恐慌度，0-1
@@ -2421,7 +2378,7 @@
 			}
 
 			THREE.SkinnedMesh.prototype.copy = function (source, recursive) {
-				// THREE.Mesh.prototype.copy.call( this, source );
+				// THREE.Mesh.prototype.copy.call( this, source );
 				THREE.Object3D.prototype.copy.call(this, source, recursive);
 				//this.drawMode = source.drawMode;
 				if (source.morphTargetInfluences !== undefined) {
@@ -2430,7 +2387,7 @@
 				if (source.morphTargetDictionary !== undefined) {
 					this.morphTargetDictionary = Object.assign({}, source.morphTargetDictionary);
 				}
-				//TODO:Unknown intention
+				//TODO:Unknown intention
 				this._sourceMeshUuid = source.uuid;
 				return this;
 			};
@@ -2485,10 +2442,10 @@
 
 				var temp, number;
 				if(surplus>=0&&surplus<=10){
-					number = multi * 10 + surplus;
+					number = sum * 10 + surplus;
 				}
 				else {
-					number = multi *10 + 10;
+					number = sum *10 + 10;
 				}
 				// number = multi;
 				for (var i = 0; i < number; i++) {
@@ -2696,15 +2653,14 @@
 
 				var temp, number;
 				if(surplus>=10&&surplus<=20){
-					number = multi * 10 + surplus - 10;
+					number = sum * 10 + surplus - 10;
 				}
 				else if(surplus < 10){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi *10 + 10;
+					number = sum *10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -2892,15 +2848,14 @@
 
 				var temp, number;
 				if(surplus>=20&&surplus<=21){
-					number = multi + surplus - 20;
+					number = sum + surplus - 20;
 				}
 				else if(surplus < 20){
-					number = multi;
+					number = sum;
 				}
 				else {
-					number = multi + 1;
+					number = sum + 1;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL, textureURL1;
@@ -2988,15 +2943,14 @@
 
 				var temp, number;
 				if(surplus>=21&&surplus<=22){
-					number = multi + surplus - 21;
+					number = sum + surplus - 21;
 				}
 				else if(surplus < 21){
-					number = multi ;
+					number = sum ;
 				}
 				else {
-					number = multi+ 1;
+					number = sum+ 1;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -3073,15 +3027,14 @@
 
 				var temp, number;
 				if(surplus>=22&&surplus<=32){
-					number = multi * 10 + surplus - 22;
+					number = sum * 10 + surplus - 22;
 				}
 				else if(surplus < 22){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi *10 + 10;
+					number = sum *10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 31;
 					var newMesh, textureURL, textureURL1;
@@ -3286,15 +3239,14 @@
 
 				var temp, number;
 				if(surplus>=32&&surplus<=42){
-					number = multi * 10 + surplus - 32;
+					number = sum * 10 + surplus - 32;
 				}
 				else if(surplus < 32){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi *10 + 10;
+					number = sum *10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -3431,15 +3383,15 @@
 					var headRandom =1 +  Math.random()*4/number;
 					var upperRandom1 = 1 + Math.random()*2/number;
 					var upperRandom2 = 1 + Math.random()*3/number;
-					var thighRandom = 1 + Math.random()*2/multi;
+					var thighRandom = 1 + Math.random()*2/number;
 
-					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
-					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
-					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
-					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
-					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
-					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
-					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+					var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[18];
 
 					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
 					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
@@ -3483,15 +3435,14 @@
 
 				var temp, number;
 				if(surplus>=42&&surplus<=43){
-					number = multi + surplus - 42;
+					number = sum + surplus - 42;
 				}
 				else if(surplus < 42){
-					number = multi;
+					number = sum;
 				}
 				else {
-					number = multi + 1;
+					number = sum + 1;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -3514,10 +3465,10 @@
 					newMesh.scene.rotation.set(0, Math.PI*13/48, 0);
 
 					//人物骨骼参数化
-					var headRandom =1 +  Math.random()* 2/number;
+					var headRandom =1 +  Math.random()/number;
 					var upperRandom1 = 1 + Math.random()/number;
 					var upperRandom2 = 1 + Math.random()/number;
-					var upperRandom3 = 1 + Math.random()*1.5/number;
+					var upperRandom3 = 1 + Math.random()*1.3/number;
 
 					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[9];
 					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
@@ -3563,15 +3514,14 @@
 
 				var temp, number;
 				if(surplus>=43&&surplus<=53){
-					number = multi * 10 + surplus - 43;
+					number = sum * 10 + surplus - 43;
 				}
 				else if(surplus < 43){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi * 10 + 10;
+					number = sum * 10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 31;
 					var newMesh, textureURL, textureURL1;
@@ -3776,15 +3726,14 @@
 
 				var temp, number;
 				if(surplus>=53&&surplus<=63){
-					number = multi * 10 + surplus - 53;
+					number = sum * 10 + surplus - 53;
 				}
 				else if(surplus < 53){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi * 10 + 10;
+					number = sum * 10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -3923,13 +3872,13 @@
 					var upperRandom2 = 1 + Math.random()*3/number;
 					var thighRandom = 1 + Math.random()*2/number;
 
-					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
-					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
-					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
-					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
-					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
-					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
-					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+					var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[18];
 
 					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
 					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
@@ -3973,15 +3922,14 @@
 
 				var temp, number;
 				if(surplus>=63&&surplus<=64){
-					number = multi + surplus - 63;
+					number = sum + surplus - 63;
 				}
 				else if(surplus < 63){
-					number = multi;
+					number = sum;
 				}
 				else {
-					number = multi + 1;
+					number = sum + 1;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -4004,10 +3952,10 @@
 					newMesh.scene.rotation.set(0, Math.PI/4, 0);
 
 					//人物骨骼参数化
-					var headRandom =1 +  Math.random()* 2/number;
+					var headRandom =1 +  Math.random()/number;
 					var upperRandom1 = 1 + Math.random()/number;
 					var upperRandom2 = 1 + Math.random()/number;
-					var upperRandom3 = 1 + Math.random()*1.5/number;
+					var upperRandom3 = 1 + Math.random()*1.3/number;
 
 					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[9];
 					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
@@ -4025,13 +3973,13 @@
 					var upperRandom2 = 1 + Math.random()/number;
 					var thighRandom = 1 + Math.random()/number;
 
-					var head = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[4];
-					var chest = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[0];
-					var wist = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[1];
-					var lThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[9];
-					var lThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[11];
-					var rThigh1 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[8];
-					var rThigh2 = newMesh.scene.children[0].children[3].children[0].skeleton.boneInverses[10];
+					var head = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
+					var chest = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
+					var wist = newMesh.scene.children[0].children[3].skeleton.boneInverses[1];
+					var lThigh1 = newMesh.scene.children[0].children[3].skeleton.boneInverses[9];
+					var lThigh2 = newMesh.scene.children[0].children[3].skeleton.boneInverses[11];
+					var rThigh1 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
+					var rThigh2 = newMesh.scene.children[0].children[3].skeleton.boneInverses[10];
 
 					head.scale(new THREE.Vector3(headRandom, headRandom, 1));
 					chest.scale(new THREE.Vector3(upperRandom1, 1, 1));
@@ -4075,15 +4023,14 @@
 
 				var temp, number;
 				if(surplus>=64&&surplus<=74){
-					number = multi * 10 + surplus - 64;
+					number = sum * 10 + surplus - 64;
 				}
 				else if(surplus < 64){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi * 10 + 10;
+					number = sum * 10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 
 					temp = i % 31;
@@ -4289,15 +4236,14 @@
 
 				var temp, number;
 				if(surplus>=74&&surplus<=84){
-					number = multi * 10 + surplus - 78;
+					number = sum * 10 + surplus - 78;
 				}
 				else if(surplus < 74){
-					number = multi * 10;
+					number = sum * 10;
 				}
 				else {
-					number = multi * 10 + 10;
+					number = sum * 10 + 10;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 39;
 					var newMesh, textureURL;
@@ -4436,13 +4382,13 @@
 					var upperRandom2 = 1 + Math.random()*3/number;
 					var thighRandom = 1 + Math.random()*2/number;
 
-					var head0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[2];
-					var chest0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[0];
-					var wist0 = newMesh.scene.children[0].children[3].skeleton.boneInverses[4];
-					var lThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[7];
-					var lThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[8];
-					var rThigh10 = newMesh.scene.children[0].children[3].skeleton.boneInverses[17];
-					var rThigh20 = newMesh.scene.children[0].children[3].skeleton.boneInverses[18];
+					var head0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[2];
+					var chest0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[0];
+					var wist0 = newMesh.scene.children[0].children[2].skeleton.boneInverses[4];
+					var lThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[7];
+					var lThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[8];
+					var rThigh10 = newMesh.scene.children[0].children[2].skeleton.boneInverses[17];
+					var rThigh20 = newMesh.scene.children[0].children[2].skeleton.boneInverses[18];
 
 					head0.scale(new THREE.Vector3(headRandom, headRandom, 1));
 					chest0.scale(new THREE.Vector3(upperRandom1, upperRandom1, 1));
@@ -4486,15 +4432,14 @@
 
 				var temp, number;
 				if(surplus>=84&&surplus<=85){
-					number = multi + surplus - 84;
+					number = sum + surplus - 84;
 				}
 				else if(surplus < 84){
-					number = multi;
+					number = sum;
 				}
 				else {
-					number = multi + 1;
+					number = sum + 1;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL, textureURL1;
@@ -4582,17 +4527,15 @@
 			var promiseAll = Promise.all(arr13).then((data) => {
 
 				var temp, number;
-				number = multi;
 				if(surplus>=85&&surplus<=86){
-					number = multi + surplus - 85;
+					number = sum + surplus - 85;
 				}
 				else if(surplus < 85){
-					number = multi;
+					number = sum;
 				}
 				else {
-					number = multi + 1;
+					number = sum + 1;
 				}
-				// number = multi;
 				for (var i = 0; i < number; i++) {
 					temp = i % 2;
 					var newMesh, textureURL;
@@ -4761,6 +4704,13 @@
 		}
 
 		animate();
+	}
+</script>
+<script type="text/javascript">
+	function handleClick(num){
+		multi = num;
+		console.log("handleClick",multi);
+		load();
 	}
 </script>
 </body>
